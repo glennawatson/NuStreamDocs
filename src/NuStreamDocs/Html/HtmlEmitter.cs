@@ -27,8 +27,11 @@ public static class HtmlEmitter
     /// <summary>Buffer size that fits any formatted <see cref="int"/>.</summary>
     private const int MaxFormattedIntLength = 11;
 
-    /// <summary>Initial block capacity for a list item body scanned on its own.</summary>
+    /// <summary>Initial block capacity for a list item or block-quote body scanned on its own.</summary>
     private const int InitialNestedBlockCapacity = 8;
+
+    /// <summary>Initial byte capacity for a block-quote body.</summary>
+    private const int InitialQuoteBodyCapacity = 256;
 
     /// <summary>Bytes that can begin a block other than a paragraph (digits are checked separately).</summary>
     private static readonly SearchValues<byte> BlockMarkerBytes = SearchValues.Create("#>-*+_`~<"u8);
@@ -397,6 +400,11 @@ public static class HtmlEmitter
                     return EmitList(source, blocks, i, writer);
                 }
 
+            case BlockKind.BlockQuote:
+                {
+                    return EmitBlockQuote(source, blocks, i, writer);
+                }
+
             case BlockKind.IndentedCode:
                 {
                     return EmitIndentedCode(source, blocks, i, writer);
@@ -511,6 +519,62 @@ public static class HtmlEmitter
         }
 
         return line[consumed..];
+    }
+
+    /// <summary>Emits a run of <see cref="BlockKind.BlockQuote"/> lines as a <c>&lt;blockquote&gt;</c> whose content is rendered as a nested document.</summary>
+    /// <param name="source">UTF-8 source buffer.</param>
+    /// <param name="blocks">Block descriptors.</param>
+    /// <param name="start">Index of the first <see cref="BlockKind.BlockQuote"/> line.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <returns>Index of the last block consumed.</returns>
+    /// <remarks>A non-blank line directly after quoted paragraph text continues the quote without a <c>&gt;</c> marker.</remarks>
+    private static int EmitBlockQuote(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int start,
+        IBufferWriter<byte> writer)
+    {
+        ArrayBufferWriter<byte> body = new(InitialQuoteBodyCapacity);
+        var last = start;
+        var canContinueLazily = false;
+        for (var i = start; i < blocks.Length; i++)
+        {
+            var line = source.Slice(blocks[i].Start, blocks[i].Length);
+            if (blocks[i].Kind is BlockKind.BlockQuote)
+            {
+                var content = StripQuoteMarker(line);
+                Write(content, body);
+                Write("\n"u8, body);
+                canContinueLazily = !MayStartBlock(content);
+                last = i;
+                continue;
+            }
+
+            if (!canContinueLazily || blocks[i].Kind is not BlockKind.Paragraph)
+            {
+                break;
+            }
+
+            Write(line, body);
+            Write("\n"u8, body);
+            last = i;
+        }
+
+        Write("<blockquote>\n"u8, writer);
+        ArrayBufferWriter<BlockSpan> bodyBlocks = new(InitialNestedBlockCapacity);
+        _ = BlockScanner.Scan(body.WrittenSpan, bodyBlocks);
+        EmitBlocks(body.WrittenSpan, bodyBlocks.WrittenSpan, false, writer);
+        Write("</blockquote>\n"u8, writer);
+        return last;
+    }
+
+    /// <summary>Removes the leading <c>&gt;</c> marker and one optional following space from a block-quote line.</summary>
+    /// <param name="line">UTF-8 block-quote line.</param>
+    /// <returns>The quoted content.</returns>
+    private static ReadOnlySpan<byte> StripQuoteMarker(ReadOnlySpan<byte> line)
+    {
+        var i = SkipSpaces(line, 0) + 1;
+        return i < line.Length && line[i] is (byte)' ' ? line[(i + 1)..] : line[i..];
     }
 
     /// <summary>Emits a run of same-kind <see cref="BlockKind.ListItem"/> blocks and their bodies as a single <c>&lt;ul&gt;</c> or <c>&lt;ol&gt;</c>.</summary>
@@ -782,6 +846,7 @@ public static class HtmlEmitter
             BlockKind.ListItem => FindListEnd(body, blocks, index, IsOrderedItemLine(body.Slice(blocks[index].Start, blocks[index].Length))),
             BlockKind.FencedCode => FindFenceChildEnd(blocks, index),
             BlockKind.IndentedCode => FindIndentedCodeChildEnd(blocks, index),
+            BlockKind.BlockQuote => FindKindRunEnd(blocks, index, BlockKind.BlockQuote),
             BlockKind.Paragraph => FindKindRunEnd(blocks, index, BlockKind.Paragraph),
             BlockKind.HtmlBlock => FindKindRunEnd(blocks, index + 1, BlockKind.HtmlBlockContent),
             _ => index + 1

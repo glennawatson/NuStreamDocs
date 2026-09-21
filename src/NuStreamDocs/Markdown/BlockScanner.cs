@@ -282,7 +282,7 @@ public static class BlockScanner
             return BlockKind.IndentedCode;
         }
 
-        var kind = ClassifyContentLine(line[indent..], ref fence, ref html, out level);
+        var kind = ClassifyContentLine(line[indent..], prevKind, ref fence, ref html, out level);
         list = kind is BlockKind.ListItem
             ? new(ComputeListContentIndent(line, indent, level))
             : default;
@@ -309,12 +309,14 @@ public static class BlockScanner
 
     /// <summary>Classifies the indent-trimmed body of a content line.</summary>
     /// <param name="body">Indent-trimmed line.</param>
+    /// <param name="prevKind">Classification of the previous line; a setext underline is only recognized directly below a paragraph line.</param>
     /// <param name="fence">Open fence state to populate when this line opens a fence.</param>
     /// <param name="html">Open html-block state to populate when this line opens an HTML block.</param>
     /// <param name="level">Heading level / fence length / list indent populated on return.</param>
     /// <returns>Detected <see cref="BlockKind"/>.</returns>
     private static BlockKind ClassifyContentLine(
         ReadOnlySpan<byte> body,
+        BlockKind prevKind,
         ref FenceState fence,
         ref HtmlBlockState html,
         out int level)
@@ -346,7 +348,7 @@ public static class BlockScanner
             return BlockKind.ThematicBreak;
         }
 
-        if (TryClassifySetextUnderline(body, out level))
+        if (TryClassifySetextUnderline(body, prevKind, out level))
         {
             return BlockKind.SetextHeading;
         }
@@ -540,13 +542,19 @@ public static class BlockScanner
         return run >= ThematicMinimum;
     }
 
-    /// <summary>Recognizes a setext underline (<c>===</c> or <c>---</c>).</summary>
+    /// <summary>Recognizes a setext underline (<c>===</c> or <c>---</c>) directly below a paragraph line.</summary>
     /// <param name="body">Indent-trimmed line.</param>
+    /// <param name="prevKind">Classification of the previous line.</param>
     /// <param name="level">1 for <c>=</c>, 2 for <c>-</c>.</param>
     /// <returns>True when <paramref name="body"/> is a setext underline.</returns>
-    private static bool TryClassifySetextUnderline(ReadOnlySpan<byte> body, out int level)
+    private static bool TryClassifySetextUnderline(ReadOnlySpan<byte> body, BlockKind prevKind, out int level)
     {
         level = 0;
+        if (prevKind is not BlockKind.Paragraph)
+        {
+            return false;
+        }
+
         var marker = body[0];
         if (marker is not EqualSign and not Hyphen)
         {

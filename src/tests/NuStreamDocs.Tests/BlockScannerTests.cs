@@ -38,6 +38,24 @@ public class BlockScannerTests
         await Assert.That(kinds[1]).IsEqualTo(BlockKind.SetextHeading);
     }
 
+    /// <summary>A lone hyphen with no paragraph above is a list item, not a setext underline.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task LoneHyphenWithoutParagraphIsListItem()
+    {
+        var kinds = ScanKinds("-\n"u8);
+        await Assert.That(kinds[0]).IsEqualTo(BlockKind.ListItem);
+    }
+
+    /// <summary>A lone equals sign with no paragraph above is a paragraph, not a setext underline.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task LoneEqualsWithoutParagraphIsParagraph()
+    {
+        var kinds = ScanKinds("=\n"u8);
+        await Assert.That(kinds[0]).IsEqualTo(BlockKind.Paragraph);
+    }
+
     /// <summary>Lines inside an open fence should be FencedCodeContent regardless of surface shape.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]

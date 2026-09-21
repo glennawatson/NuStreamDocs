@@ -215,6 +215,25 @@ public class HtmlEmitterListTests
         await Assert.That(html).DoesNotContain("&lt;div");
     }
 
+    /// <summary>A block quote indented under an item renders as a block quote inside the item.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BlockQuoteInsideItemRendersAsBlockQuote()
+    {
+        var html = Render("- a\n  > quote\n- b"u8);
+        await Assert.That(html).IsEqualTo(
+            "<ul>\n<li>a\n<blockquote>\n<p>quote</p>\n</blockquote>\n</li>\n<li>b</li>\n</ul>\n");
+    }
+
+    /// <summary>A lone <c>-</c> line opens an empty bullet item.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task LoneHyphenOpensEmptyItem()
+    {
+        var html = Render("-\n- b"u8);
+        await Assert.That(html).IsEqualTo("<ul>\n<li></li>\n<li>b</li>\n</ul>\n");
+    }
+
     /// <summary>An empty item renders an empty <c>&lt;li&gt;</c>.</summary>
     /// <returns>Async test.</returns>
     [Test]
