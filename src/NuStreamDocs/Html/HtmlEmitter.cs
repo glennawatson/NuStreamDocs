@@ -597,7 +597,7 @@ public static class HtmlEmitter
                 var content = StripQuoteMarker(line);
                 Write(content, body);
                 Write("\n"u8, body);
-                canContinueLazily = !MayStartBlock(content);
+                canContinueLazily = EndsInParagraphText(content);
                 last = i;
                 continue;
             }
@@ -618,6 +618,20 @@ public static class HtmlEmitter
         EmitBlocks(body.WrittenSpan, bodyBlocks.WrittenSpan, false, writer);
         Write("</blockquote>\n"u8, writer);
         return last;
+    }
+
+    /// <summary>True when quoted content, after any nested quote markers, is paragraph text that a following unmarked line can continue.</summary>
+    /// <param name="content">Quoted content with the outer marker already removed.</param>
+    /// <returns>True when the innermost quoted line is paragraph text.</returns>
+    private static bool EndsInParagraphText(ReadOnlySpan<byte> content)
+    {
+        var text = content;
+        while (text is [(byte)'>', ..])
+        {
+            text = StripQuoteMarker(text);
+        }
+
+        return !MayStartBlock(text);
     }
 
     /// <summary>Removes the leading <c>&gt;</c> marker and one optional following space from a block-quote line.</summary>

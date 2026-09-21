@@ -92,6 +92,41 @@ public class HtmlEmitterBlockQuoteTests
         await Assert.That(html).IsEqualTo("<blockquote>\n<h1>title</h1>\n</blockquote>\n<p>plain</p>\n");
     }
 
+    /// <summary>An unmarked line after a nested quote's paragraph text continues the innermost paragraph.</summary>
+    /// <param name="markdown">Source text.</param>
+    /// <param name="expected">Expected rendered HTML.</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments("> > inner\nlazy\n", "<blockquote>\n<blockquote>\n<p>inner\nlazy</p>\n</blockquote>\n</blockquote>\n")]
+    [Arguments("> > > deep\nlazy\n", "<blockquote>\n<blockquote>\n<blockquote>\n<p>deep\nlazy</p>\n</blockquote>\n</blockquote>\n</blockquote>\n")]
+    [Arguments(">> inner\nlazy\n", "<blockquote>\n<blockquote>\n<p>inner\nlazy</p>\n</blockquote>\n</blockquote>\n")]
+    [Arguments(
+        "> Outer line\n> > Inner line\nlazy continuation\n",
+        "<blockquote>\n<p>Outer line</p>\n<blockquote>\n<p>Inner line\nlazy continuation</p>\n</blockquote>\n</blockquote>\n")]
+    public async Task LazyLineAfterNestedQuoteJoinsInnermostParagraph(string markdown, string expected)
+    {
+        var html = Render(Encoding.UTF8.GetBytes(markdown));
+        await Assert.That(html).IsEqualTo(expected);
+    }
+
+    /// <summary>An unmarked line after a nested quote that opens another block ends the quotes.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UnmarkedLineAfterNestedQuotedHeadingEndsQuotes()
+    {
+        var html = Render("> > # title\nplain"u8);
+        await Assert.That(html).IsEqualTo("<blockquote>\n<blockquote>\n<h1>title</h1>\n</blockquote>\n</blockquote>\n<p>plain</p>\n");
+    }
+
+    /// <summary>An unmarked line after an empty nested quote line ends the quotes.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UnmarkedLineAfterEmptyNestedQuoteLineEndsQuotes()
+    {
+        var html = Render("> >\nplain"u8);
+        await Assert.That(html).IsEqualTo("<blockquote>\n<blockquote>\n</blockquote>\n</blockquote>\n<p>plain</p>\n");
+    }
+
     /// <summary>A lone <c>=</c> line with no paragraph above is plain text.</summary>
     /// <returns>Async test.</returns>
     [Test]
