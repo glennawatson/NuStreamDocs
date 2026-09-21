@@ -19,6 +19,13 @@ public static class MarkdownRenderer
     /// <summary>Cap above which a parked block buffer is dropped instead of cached, so an outlier page doesn't pin a multi-MB array.</summary>
     private const int MaxCachedBlockCapacity = 4 * 1024;
 
+    /// <summary>Cap above which a parked reference-rewrite buffer is dropped instead of cached, so an outlier page doesn't pin a multi-MB array.</summary>
+    private const int MaxCachedRewriteCapacity = 256 * 1024;
+
+    /// <summary>Per-thread parked reference-rewrite buffer reused across <see cref="Render"/> calls on the same worker.</summary>
+    [ThreadStatic]
+    private static ArrayBufferWriter<byte>? _rewriteBufferCache;
+
     /// <summary>Per-thread parked block buffer reused across <see cref="Render"/> calls on the same worker.</summary>
     [ThreadStatic]
     private static ArrayBufferWriter<BlockSpan>? _blockBufferCache;
@@ -67,11 +74,22 @@ public static class MarkdownRenderer
         // every `[text][label]` / `[text][]` / collapsed `[label]` into the inline `[text](url)`
         // form before block scanning. Skips when the source has no `]:` sequence at all so the
         // common no-references hot path pays nothing beyond a vectorized IndexOf.
-        byte[]? rewrittenBuffer = null;
+        ArrayBufferWriter<byte>? rewriteBuffer = null;
         if (LinkReferenceRewriter.MayContainReferences(markdown))
         {
-            rewrittenBuffer = LinkReferenceRewriter.Rewrite(markdown);
-            markdown = rewrittenBuffer;
+            rewriteBuffer = _rewriteBufferCache;
+            _rewriteBufferCache = null;
+            if (rewriteBuffer is null)
+            {
+                rewriteBuffer = new(markdown.Length);
+            }
+            else
+            {
+                rewriteBuffer.ResetWrittenCount();
+            }
+
+            LinkReferenceRewriter.Rewrite(markdown, rewriteBuffer);
+            markdown = rewriteBuffer.WrittenSpan;
         }
 
         var blockBuffer = _blockBufferCache;
@@ -97,7 +115,10 @@ public static class MarkdownRenderer
                 _blockBufferCache = blockBuffer;
             }
 
-            _ = rewrittenBuffer; // Keep alive for the duration of Render; nothing else owns it.
+            if (rewriteBuffer is { Capacity: <= MaxCachedRewriteCapacity })
+            {
+                _rewriteBufferCache = rewriteBuffer;
+            }
         }
     }
 }
