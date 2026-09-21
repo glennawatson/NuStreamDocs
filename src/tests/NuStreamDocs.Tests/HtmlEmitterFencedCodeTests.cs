@@ -45,6 +45,24 @@ public class HtmlEmitterFencedCodeTests
         await Assert.That(html).Contains("language-py");
     }
 
+    /// <summary>A fence with no closing line runs to the end of the document and its content is emitted once.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UnclosedFenceEmitsContentOnce()
+    {
+        var html = Render("```\nfirst\nsecond");
+        await Assert.That(html).IsEqualTo("<pre><code>first\nsecond\n</code></pre>\n");
+    }
+
+    /// <summary>A fence opener that is the last line emits an empty code block.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UnclosedFenceOpenerAloneEmitsEmptyBlock()
+    {
+        var html = Render("```");
+        await Assert.That(html).IsEqualTo("<pre><code></code></pre>\n");
+    }
+
     /// <summary>Code body characters needing escape are escaped.</summary>
     /// <returns>Async test.</returns>
     [Test]

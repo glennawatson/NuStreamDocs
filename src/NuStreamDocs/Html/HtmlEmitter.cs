@@ -246,7 +246,7 @@ public static class HtmlEmitter
 
         Write(">"u8, writer);
 
-        var closerIndex = openerIndex;
+        var closerIndex = blocks.Length - 1;
         for (var j = openerIndex + 1; j < blocks.Length; j++)
         {
             if (blocks[j].Kind == BlockKind.FencedCodeContent)
