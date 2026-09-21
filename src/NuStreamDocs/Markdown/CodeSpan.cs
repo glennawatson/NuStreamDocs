@@ -41,12 +41,14 @@ internal static class CodeSpan
         var closeStart = FindMatchingClose(source, contentStart, fenceLength);
         if (closeStart < 0)
         {
+            // The whole unmatched run stays literal; the caller advances one byte past the returned cursor.
+            pos = contentStart - 1;
             return false;
         }
 
         InlineRenderer.FlushText(source, pendingTextStart, fenceStart, writer);
         Utf8StringWriter.Write(writer, "<code>"u8);
-        HtmlEscape.EscapeText(source[contentStart..closeStart], writer);
+        HtmlEscape.EscapeText(AsciiByteHelpers.TrimAsciiWhitespace(source[contentStart..closeStart]), writer);
         Utf8StringWriter.Write(writer, "</code>"u8);
 
         pos = closeStart + fenceLength;
