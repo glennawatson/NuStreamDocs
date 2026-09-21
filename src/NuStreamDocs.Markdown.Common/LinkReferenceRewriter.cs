@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Markdown.Common;
@@ -28,8 +29,12 @@ public static class LinkReferenceRewriter
     /// <summary>Length of a title's opening and closing delimiters.</summary>
     private const int MinTitleLength = 2;
 
-    /// <summary>Maximum label length stored on the stack.</summary>
-    private const int MaxStackLabelLength = 256;
+    /// <summary>Cap above which a parked definition table is dropped instead of cached, so an outlier page doesn't pin a large table.</summary>
+    private const int MaxCachedTableCapacity = 4 * 1024;
+
+    /// <summary>Per-thread parked definition table reused across rewrites on the same worker.</summary>
+    [ThreadStatic]
+    private static LinkReferenceTable? _tableCache;
 
     /// <summary>Skips the rewrite when the input has no chance of containing a definition line.</summary>
     /// <param name="source">UTF-8 source bytes.</param>
@@ -47,15 +52,8 @@ public static class LinkReferenceRewriter
             return source.ToArray();
         }
 
-        var definitions = CollectDefinitions(source);
-        if (definitions.Count is 0)
-        {
-            return source.ToArray();
-        }
-
         ArrayBufferWriter<byte> writer = new(source.Length);
-        RewriteCore(source, definitions, writer);
-        return writer.WrittenSpan.ToArray();
+        return TryRewrite(source, writer) ? writer.WrittenSpan.ToArray() : source.ToArray();
     }
 
     /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
@@ -63,29 +61,48 @@ public static class LinkReferenceRewriter
     /// <param name="writer">UTF-8 sink; receives the rewritten output.</param>
     public static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
     {
-        if (!MayContainReferences(source))
+        if (!MayContainReferences(source) || !TryRewrite(source, writer))
         {
             Write(writer, source);
-            return;
         }
+    }
 
-        var definitions = CollectDefinitions(source);
-        if (definitions.Count is 0)
+    /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/> when it defines at least one reference.</summary>
+    /// <param name="source">UTF-8 source bytes.</param>
+    /// <param name="writer">UTF-8 sink; untouched when no definition exists.</param>
+    /// <returns>True when definitions were found and the rewritten output was written.</returns>
+    private static bool TryRewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    {
+        var table = _tableCache ?? new();
+        _tableCache = null;
+        try
         {
-            Write(writer, source);
-            return;
-        }
+            table.Reset(source.Count("]:"u8));
+            CollectDefinitions(source, table);
+            if (table.Count is 0)
+            {
+                return false;
+            }
 
-        RewriteCore(source, definitions, writer);
+            RewriteCore(source, table, writer);
+            return true;
+        }
+        finally
+        {
+            if (table.Capacity <= MaxCachedTableCapacity)
+            {
+                _tableCache = table;
+            }
+        }
     }
 
     /// <summary>Two-pass rewrite once the definition set is known to be non-empty.</summary>
     /// <param name="source">UTF-8 source bytes.</param>
-    /// <param name="definitions">Pre-built case-folded label → definition map.</param>
+    /// <param name="definitions">Pre-built definition table.</param>
     /// <param name="writer">UTF-8 sink.</param>
     private static void RewriteCore(
         ReadOnlySpan<byte> source,
-        Dictionary<string, Definition> definitions,
+        LinkReferenceTable definitions,
         IBufferWriter<byte> writer)
     {
         var pos = 0;
@@ -104,7 +121,7 @@ public static class LinkReferenceRewriter
     private static int ProcessOne(
         ReadOnlySpan<byte> source,
         int pos,
-        Dictionary<string, Definition> definitions,
+        LinkReferenceTable definitions,
         IBufferWriter<byte> writer)
     {
         if (TryConsumeCodeRegion(source, pos, writer, out var afterCode))
@@ -206,7 +223,7 @@ public static class LinkReferenceRewriter
     private static bool TryRewriteReference(
         ReadOnlySpan<byte> source,
         int pos,
-        Dictionary<string, Definition> definitions,
+        LinkReferenceTable definitions,
         IBufferWriter<byte> writer,
         out int consumed)
     {
@@ -242,41 +259,46 @@ public static class LinkReferenceRewriter
                 refLabel = label;
             }
 
-            if (!TryResolve(definitions, refLabel, out var def))
+            if (!TryResolve(source, definitions, refLabel, out var href, out var title))
             {
                 return false;
             }
 
-            EmitInlineLink(label, in def, writer);
+            EmitInlineLink(label, href.AsSpan(source), title.AsSpan(source), writer);
             consumed = secondClose + 1 - pos;
             return true;
         }
 
         // Shortcut reference: `[label]` only.
-        if (!TryResolve(definitions, label, out var defShortcut))
+        if (!TryResolve(source, definitions, label, out var shortcutHref, out var shortcutTitle))
         {
             return false;
         }
 
-        EmitInlineLink(label, in defShortcut, writer);
+        EmitInlineLink(label, shortcutHref.AsSpan(source), shortcutTitle.AsSpan(source), writer);
         consumed = firstClose + 1 - pos;
         return true;
     }
 
     /// <summary>Emits <c>[text](href "title")</c> into <paramref name="writer"/>.</summary>
     /// <param name="text">Visible label bytes.</param>
-    /// <param name="def">Resolved definition.</param>
+    /// <param name="href">Resolved href bytes.</param>
+    /// <param name="title">Resolved title bytes; empty for no title.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitInlineLink(ReadOnlySpan<byte> text, in Definition def, IBufferWriter<byte> writer)
+    private static void EmitInlineLink(
+        ReadOnlySpan<byte> text,
+        ReadOnlySpan<byte> href,
+        ReadOnlySpan<byte> title,
+        IBufferWriter<byte> writer)
     {
         Write(writer, "["u8);
         Write(writer, text);
         Write(writer, "]("u8);
-        Write(writer, def.Href);
-        if (def.Title is [_, ..])
+        Write(writer, href);
+        if (title is [_, ..])
         {
             Write(writer, " \""u8);
-            WriteTitle(writer, def.Title);
+            WriteTitle(writer, title);
             Write(writer, "\""u8);
         }
 
@@ -305,32 +327,30 @@ public static class LinkReferenceRewriter
     }
 
     /// <summary>Resolves a reference label against the definition map.</summary>
+    /// <param name="source">UTF-8 source the definitions were read from.</param>
     /// <param name="definitions">Defined references.</param>
     /// <param name="label">Raw label bytes.</param>
-    /// <param name="def">Resolved definition on hit.</param>
-    /// <returns>True when the label is in the map.</returns>
+    /// <param name="href">Href range of the definition on hit.</param>
+    /// <param name="title">Title range of the definition on hit.</param>
+    /// <returns>True when the label is defined.</returns>
     private static bool TryResolve(
-        Dictionary<string, Definition> definitions,
+        ReadOnlySpan<byte> source,
+        LinkReferenceTable definitions,
         ReadOnlySpan<byte> label,
-        out Definition def)
+        out ByteRange href,
+        out ByteRange title)
     {
-        def = default;
+        href = default;
+        title = default;
         var trimmed = AsciiByteHelpers.TrimAsciiWhitespace(label);
-        if (trimmed.IsEmpty)
-        {
-            return false;
-        }
-
-        var key = NormalizeLabel(trimmed);
-        return definitions.TryGetValue(key, out def);
+        return !trimmed.IsEmpty && definitions.TryGet(source, trimmed, out href, out title);
     }
 
-    /// <summary>Walks <paramref name="source"/> once, building the definition map.</summary>
+    /// <summary>Walks <paramref name="source"/> once, filling <paramref name="map"/> with each definition; the first definition of a label wins.</summary>
     /// <param name="source">UTF-8 source.</param>
-    /// <returns>Map keyed on the case-folded label.</returns>
-    private static Dictionary<string, Definition> CollectDefinitions(ReadOnlySpan<byte> source)
+    /// <param name="map">Destination table.</param>
+    private static void CollectDefinitions(ReadOnlySpan<byte> source, LinkReferenceTable map)
     {
-        Dictionary<string, Definition> map = [with(StringComparer.Ordinal)];
         var pos = 0;
         while (pos < source.Length)
         {
@@ -343,15 +363,13 @@ public static class LinkReferenceRewriter
 
             if (TryParseDefinition(source, pos, out var def, out var definitionEnd))
             {
-                _ = map.TryAdd(def.Key, new(def.Href.ToArray(), def.Title.ToArray()));
+                _ = map.TryAdd(source, def.Label, def.Href, def.Title);
                 pos = definitionEnd;
                 continue;
             }
 
             pos = Utf8LineSpan.LfLineEnd(source, pos);
         }
-
-        return map;
     }
 
     /// <summary>
@@ -396,13 +414,13 @@ public static class LinkReferenceRewriter
                 return false;
             }
 
-            parsed = new(NormalizeLabel(label), hrefBytes, sameLineTitle);
+            parsed = new(RangeOf(source, label), RangeOf(source, hrefBytes), RangeOf(source, sameLineTitle));
             end = hrefLineEnd;
             return true;
         }
 
         var hasNextLineTitle = TryParseNextLineTitle(source, hrefLineEnd, out var nextLineTitle, out var nextLineEnd);
-        parsed = new(NormalizeLabel(label), hrefBytes, nextLineTitle);
+        parsed = new(RangeOf(source, label), RangeOf(source, hrefBytes), RangeOf(source, nextLineTitle));
         end = hasNextLineTitle ? nextLineEnd : hrefLineEnd;
         return true;
     }
@@ -710,52 +728,6 @@ public static class LinkReferenceRewriter
         return -1;
     }
 
-    /// <summary>Builds the case-folded ASCII key used as the dictionary lookup, collapsing internal whitespace runs to a single space.</summary>
-    /// <param name="label">Raw label bytes (already outer-trimmed).</param>
-    /// <returns>Normalised string key.</returns>
-    private static string NormalizeLabel(ReadOnlySpan<byte> label)
-    {
-        Span<char> buf = label.Length <= MaxStackLabelLength ? stackalloc char[label.Length] : new char[label.Length];
-        var written = 0;
-        var prevSpace = false;
-        for (var i = 0; i < label.Length; i++)
-        {
-            var b = label[i];
-            if (AsciiByteHelpers.IsAsciiWhitespace(b))
-            {
-                AppendCollapsedSpace(buf, ref written, ref prevSpace);
-                continue;
-            }
-
-            prevSpace = false;
-            buf[written] = AsciiByteHelpers.ToAsciiLowerChar(b);
-            written++;
-        }
-
-        if (written > 0 && buf[written - 1] is ' ')
-        {
-            written--;
-        }
-
-        return new(buf[..written]);
-    }
-
-    /// <summary>Appends at most one space to <paramref name="buf"/> for a run of whitespace bytes.</summary>
-    /// <param name="buf">Destination buffer.</param>
-    /// <param name="written">Current write index; advanced on emit.</param>
-    /// <param name="prevSpace">Tracks whether the previous emitted character was the collapsed space.</param>
-    private static void AppendCollapsedSpace(in Span<char> buf, ref int written, ref bool prevSpace)
-    {
-        if (prevSpace || written is 0)
-        {
-            return;
-        }
-
-        buf[written] = ' ';
-        written++;
-        prevSpace = true;
-    }
-
     /// <summary>Bulk-writes <paramref name="bytes"/>.</summary>
     /// <param name="writer">UTF-8 sink.</param>
     /// <param name="bytes">Bytes to write.</param>
@@ -771,32 +743,18 @@ public static class LinkReferenceRewriter
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Stored definition entry — owned UTF-8 href and title bytes.</summary>
-    /// <param name="Href">URL bytes (without surrounding angle brackets).</param>
-    /// <param name="Title">Title bytes (without delimiters); empty when the definition has no title.</param>
-    private readonly record struct Definition(byte[] Href, byte[] Title);
+    /// <summary>Returns the range of <paramref name="slice"/> within <paramref name="source"/>.</summary>
+    /// <param name="source">UTF-8 source the slice was cut from.</param>
+    /// <param name="slice">Slice of <paramref name="source"/>; empty for none.</param>
+    /// <returns>The slice's offset and length; the default range when the slice is empty.</returns>
+    private static ByteRange RangeOf(ReadOnlySpan<byte> source, ReadOnlySpan<byte> slice) =>
+        slice.IsEmpty
+            ? default
+            : new((int)Unsafe.ByteOffset(ref MemoryMarshal.GetReference(source), ref MemoryMarshal.GetReference(slice)), slice.Length);
 
     /// <summary>Transient parse result used during the collection pass.</summary>
-    private readonly ref struct ParsedDefinition
-    {
-        /// <summary>Initializes a new instance of the <see cref="ParsedDefinition"/> struct.</summary>
-        /// <param name="key">Case-folded label key.</param>
-        /// <param name="href">Href bytes.</param>
-        /// <param name="title">Title bytes without delimiters, or empty.</param>
-        public ParsedDefinition(string key, ReadOnlySpan<byte> href, ReadOnlySpan<byte> title)
-        {
-            Key = key;
-            Href = href;
-            Title = title;
-        }
-
-        /// <summary>Gets the title byte slice into the source; empty when the definition has no title.</summary>
-        public ReadOnlySpan<byte> Title { get; }
-
-        /// <summary>Gets the case-folded label key.</summary>
-        public string Key { get; }
-
-        /// <summary>Gets the href byte slice into the source.</summary>
-        public ReadOnlySpan<byte> Href { get; }
-    }
+    /// <param name="Label">Label range.</param>
+    /// <param name="Href">Href range without surrounding angle brackets.</param>
+    /// <param name="Title">Title range without delimiters; empty when the definition has no title.</param>
+    private readonly record struct ParsedDefinition(ByteRange Label, ByteRange Href, ByteRange Title);
 }
