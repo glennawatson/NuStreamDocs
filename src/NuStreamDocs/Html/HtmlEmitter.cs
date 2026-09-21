@@ -27,9 +27,6 @@ public static class HtmlEmitter
     /// <summary>Buffer size that fits any formatted <see cref="int"/>.</summary>
     private const int MaxFormattedIntLength = 11;
 
-    /// <summary>Initial block capacity for a list item or block-quote body scanned on its own.</summary>
-    private const int InitialNestedBlockCapacity = 8;
-
     /// <summary>Bytes that can begin a block other than a paragraph (digits are checked separately).</summary>
     private static readonly SearchValues<byte> BlockMarkerBytes = SearchValues.Create("#>-*+_`~<"u8);
 
@@ -614,7 +611,7 @@ public static class HtmlEmitter
         }
 
         Write("<blockquote>\n"u8, writer);
-        ArrayBufferWriter<BlockSpan> bodyBlocks = new(InitialNestedBlockCapacity);
+        var bodyBlocks = rental.Scratch.Blocks;
         _ = BlockScanner.Scan(body.WrittenSpan, bodyBlocks);
         EmitBlocks(body.WrittenSpan, bodyBlocks.WrittenSpan, false, writer);
         Write("</blockquote>\n"u8, writer);
@@ -831,7 +828,7 @@ public static class HtmlEmitter
         using var rental = NestedContentScratch.Rent();
         var body = rental.Scratch.Body;
         BuildItemBody(source, blocks, opener, end, body);
-        ArrayBufferWriter<BlockSpan> bodyBlocks = new(InitialNestedBlockCapacity);
+        var bodyBlocks = rental.Scratch.Blocks;
         _ = BlockScanner.Scan(body.WrittenSpan, bodyBlocks);
         return HasBlankBetweenChildren(body.WrittenSpan, bodyBlocks.WrittenSpan);
     }
@@ -976,9 +973,8 @@ public static class HtmlEmitter
         else
         {
             using var rental = NestedContentScratch.Rent();
-            var body = rental.Scratch.Body;
-            BuildItemBody(source, blocks, opener, end, body);
-            EmitItemBody(body.WrittenSpan, loose, writer);
+            BuildItemBody(source, blocks, opener, end, rental.Scratch.Body);
+            EmitItemBody(rental.Scratch, loose, writer);
         }
 
         Write("</li>\n"u8, writer);
@@ -1048,14 +1044,14 @@ public static class HtmlEmitter
     }
 
     /// <summary>Renders an item body as a nested document; a tight item leaves its paragraphs unwrapped.</summary>
-    /// <param name="body">De-indented item body.</param>
+    /// <param name="scratch">Buffers whose body holds the de-indented item body.</param>
     /// <param name="loose">True when the owning list is loose.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitItemBody(ReadOnlySpan<byte> body, bool loose, IBufferWriter<byte> writer)
+    private static void EmitItemBody(NestedContentScratch scratch, bool loose, IBufferWriter<byte> writer)
     {
-        ArrayBufferWriter<BlockSpan> bodyBlocks = new(InitialNestedBlockCapacity);
-        _ = BlockScanner.Scan(body, bodyBlocks);
-        var blocks = bodyBlocks.WrittenSpan;
+        var body = scratch.Body.WrittenSpan;
+        _ = BlockScanner.Scan(body, scratch.Blocks);
+        var blocks = scratch.Blocks.WrittenSpan;
 
         var first = 0;
         while (first < blocks.Length && blocks[first].Kind is BlockKind.Blank)

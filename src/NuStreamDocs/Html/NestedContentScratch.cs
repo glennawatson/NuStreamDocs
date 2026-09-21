@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using NuStreamDocs.Markdown;
 
 namespace NuStreamDocs.Html;
 
@@ -12,11 +13,17 @@ internal sealed class NestedContentScratch
     /// <summary>Initial capacity of the body buffer.</summary>
     private const int InitialBodyCapacity = 256;
 
+    /// <summary>Initial capacity of the block buffer.</summary>
+    private const int InitialBlockCapacity = 16;
+
     /// <summary>Number of nesting levels whose buffers are kept per thread; deeper levels use unpooled buffers.</summary>
     private const int MaxCachedDepth = 32;
 
     /// <summary>Body capacity above which a buffer is dropped on return instead of kept.</summary>
     private const int MaxCachedBodyCapacity = 256 * 1024;
+
+    /// <summary>Block capacity above which a buffer is dropped on return instead of kept.</summary>
+    private const int MaxCachedBlockCapacity = 16 * 1024;
 
     /// <summary>Per-thread buffers indexed by nesting depth.</summary>
     [ThreadStatic]
@@ -28,6 +35,9 @@ internal sealed class NestedContentScratch
 
     /// <summary>Gets the de-indented body of the nested content.</summary>
     internal ArrayBufferWriter<byte> Body { get; } = new(InitialBodyCapacity);
+
+    /// <summary>Gets the blocks scanned from <see cref="Body"/>.</summary>
+    internal ArrayBufferWriter<BlockSpan> Blocks { get; } = new(InitialBlockCapacity);
 
     /// <summary>Rents the buffers for the next nesting level of the current thread.</summary>
     /// <returns>A rental the caller disposes exactly once.</returns>
@@ -50,6 +60,7 @@ internal sealed class NestedContentScratch
         }
 
         scratch.Body.ResetWrittenCount();
+        scratch.Blocks.ResetWrittenCount();
         return new(scratch, index);
     }
 
@@ -59,7 +70,8 @@ internal sealed class NestedContentScratch
     internal static void Return(NestedContentScratch scratch, int index)
     {
         _depth = index;
-        if (index >= MaxCachedDepth || scratch.Body.Capacity <= MaxCachedBodyCapacity)
+        if (index >= MaxCachedDepth
+            || (scratch.Body.Capacity <= MaxCachedBodyCapacity && scratch.Blocks.Capacity <= MaxCachedBlockCapacity))
         {
             return;
         }
