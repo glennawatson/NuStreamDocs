@@ -966,7 +966,7 @@ public static class HtmlEmitter
         Write("<li>"u8, writer);
 
         var openerContent = StripListMarker(source.Slice(blocks[opener].Start, blocks[opener].Length));
-        if (end == opener + 1 && !MayStartBlock(openerContent))
+        if (IsSingleLineItem(blocks, opener, end, openerContent))
         {
             EmitSingleLineItem(openerContent, loose, writer);
         }
@@ -978,6 +978,29 @@ public static class HtmlEmitter
         }
 
         Write("</li>\n"u8, writer);
+    }
+
+    /// <summary>True when the item is one line of text, optionally followed by blank lines, that cannot open another block.</summary>
+    /// <param name="blocks">Block descriptors.</param>
+    /// <param name="opener">Index of the item's <see cref="BlockKind.ListItem"/> block.</param>
+    /// <param name="end">Exclusive end of the item.</param>
+    /// <param name="content">Item text after the list marker.</param>
+    /// <returns>True when the item can be written without scanning its body.</returns>
+    private static bool IsSingleLineItem(in ReadOnlySpan<BlockSpan> blocks, int opener, int end, ReadOnlySpan<byte> content)
+    {
+        if (MayStartBlock(content))
+        {
+            return false;
+        }
+
+        var contentEnd = end;
+        while (contentEnd > opener + 1 && blocks[contentEnd - 1].Kind is BlockKind.Blank)
+        {
+            contentEnd--;
+        }
+
+        // Body scanning drops trailing spaces from a paragraph, so text ending in one keeps that path when blank lines follow it.
+        return contentEnd == opener + 1 && (end == opener + 1 || content[^1] != (byte)' ');
     }
 
     /// <summary>Writes the text of a one-line item that cannot open another block; a loose item wraps it in a paragraph.</summary>
