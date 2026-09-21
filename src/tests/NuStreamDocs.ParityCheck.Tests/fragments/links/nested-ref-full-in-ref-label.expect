@@ -1,0 +1,4 @@
+kind: quirk
+reason: Python-Markdown resolves only the shortcut form of a reference inside a reference link's label; a full reference leaves its text literal and links the label.
+---
+<p><a href="/s">a <a href="/r">l</a> b</a></p>
