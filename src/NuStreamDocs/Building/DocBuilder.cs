@@ -41,6 +41,9 @@ public sealed class DocBuilder
     /// <summary>Configured exclude globs (forward-slashed, relative to the docs root).</summary>
     private readonly List<string> _excludes = [with(4)];
 
+    /// <summary>Post-render participants for the plugins registered when it was built; shared across renders through <see cref="Volatile"/> reads and writes.</summary>
+    private PostRenderSnapshot? _postRenderSnapshot;
+
     /// <summary>Configured input docs directory; defaults to <c>./docs</c>.</summary>
     private DirectoryPath _inputRoot = new("./docs");
 
@@ -397,8 +400,8 @@ public sealed class DocBuilder
         _ = cancellationToken;
         MarkdownRenderer.Render(source.Span, html);
 
-        var phases = PluginPhases.Partition([.. _plugins]);
-        if (phases.PostRenders.Length is 0)
+        var postRenders = PostRendersForRegisteredPlugins();
+        if (postRenders.Length is 0)
         {
             return Task.CompletedTask;
         }
@@ -414,7 +417,7 @@ public sealed class DocBuilder
                 input,
                 scratch,
                 source.Span,
-                phases.PostRenders,
+                postRenders,
                 relativePath,
                 pluginTiming);
             html.ResetWrittenCount();
@@ -499,5 +502,40 @@ public sealed class DocBuilder
 
         scratch.Add(back);
         return front;
+    }
+
+    /// <summary>Gets the sorted post-render participants among the registered plugins.</summary>
+    /// <returns>The post-render plugins in priority order.</returns>
+    private IPagePostRenderPlugin[] PostRendersForRegisteredPlugins()
+    {
+        var snapshot = Volatile.Read(ref _postRenderSnapshot);
+        if (snapshot is not null && snapshot.PluginCount == _plugins.Count)
+        {
+            return snapshot.PostRenders;
+        }
+
+        IPlugin[] plugins = [.. _plugins];
+        snapshot = new(plugins.Length, PluginPhases.Partition(plugins).PostRenders);
+        Volatile.Write(ref _postRenderSnapshot, snapshot);
+        return snapshot.PostRenders;
+    }
+
+    /// <summary>Post-render participants computed for a specific number of registered plugins.</summary>
+    private sealed class PostRenderSnapshot
+    {
+        /// <summary>Initializes a new instance of the <see cref="PostRenderSnapshot"/> class.</summary>
+        /// <param name="pluginCount">Number of registered plugins the snapshot was computed for.</param>
+        /// <param name="postRenders">Sorted post-render participants.</param>
+        public PostRenderSnapshot(int pluginCount, IPagePostRenderPlugin[] postRenders)
+        {
+            PluginCount = pluginCount;
+            PostRenders = postRenders;
+        }
+
+        /// <summary>Gets the number of registered plugins the snapshot was computed for.</summary>
+        public int PluginCount { get; }
+
+        /// <summary>Gets the sorted post-render participants.</summary>
+        public IPagePostRenderPlugin[] PostRenders { get; }
     }
 }
