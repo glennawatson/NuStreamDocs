@@ -77,6 +77,39 @@ public class TabExpanderTests
     public async Task InteriorTabInsideFenceIsPreserved() =>
         await Assert.That(Render("```\na\tb\n```"u8)).IsEqualTo("<pre><code>a\tb\n</code></pre>\n");
 
+    /// <summary>A tab after a block-quote marker advances to the next tab stop.</summary>
+    /// <param name="markdown">Source text.</param>
+    /// <param name="expected">Expected expanded text.</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments(">\tx", ">   x")]
+    [Arguments("> \tx", ">   x")]
+    [Arguments(">  \tx", ">   x")]
+    [Arguments("   >\tx", "   >    x")]
+    [Arguments(">>\tx", ">>  x")]
+    [Arguments("> >\tx", "> > x")]
+    [Arguments(">\t\tx", ">       x")]
+    public async Task TabAfterQuoteMarkerAdvancesToNextStop(string markdown, string expected) =>
+        await Assert.That(Expand(Encoding.UTF8.GetBytes(markdown))).IsEqualTo(expected);
+
+    /// <summary>A tab in quoted text after the first word is kept.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task InteriorTabInQuotedTextIsKept() =>
+        await Assert.That(Expand("> a\tb"u8)).IsEqualTo("> a\tb");
+
+    /// <summary>A tab after a quote marker leaves the remaining indent of the quoted code block.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task TabAfterQuoteMarkerLeavesRemainingIndentInCodeBlock() =>
+        await Assert.That(Render(">\t    code after tab"u8)).IsEqualTo("<blockquote>\n<pre><code>  code after tab\n</code></pre>\n</blockquote>\n");
+
+    /// <summary>A quote line holding two tabs after the marker renders as a code block with the remaining columns as indent.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task TwoTabsAfterQuoteMarkerRenderAsCodeBlock() =>
+        await Assert.That(Render("> a\n>\n>\t\tcode"u8)).IsEqualTo("<blockquote>\n<p>a</p>\n<pre><code>  code\n</code></pre>\n</blockquote>\n");
+
     /// <summary>Expands the indentation tabs of <paramref name="markdown"/>.</summary>
     /// <param name="markdown">UTF-8 markdown.</param>
     /// <returns>The expanded text.</returns>
