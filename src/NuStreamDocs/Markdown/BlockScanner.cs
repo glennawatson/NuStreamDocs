@@ -282,7 +282,7 @@ public static class BlockScanner
             return BlockKind.IndentedCode;
         }
 
-        var kind = ClassifyContentLine(line[indent..], prevKind, ref fence, ref html, out level);
+        var kind = ClassifyContentLine(line[indent..], indent, prevKind, ref fence, ref html, out level);
         if (IsLazyListContinuation(kind, list, prevKind))
         {
             level = list.ContentIndent;
@@ -329,6 +329,7 @@ public static class BlockScanner
 
     /// <summary>Classifies the indent-trimmed body of a content line.</summary>
     /// <param name="body">Indent-trimmed line.</param>
+    /// <param name="indent">Number of leading indent bytes removed from the line to form <paramref name="body"/>.</param>
     /// <param name="prevKind">Classification of the previous line; a setext underline is only recognized directly below a paragraph line.</param>
     /// <param name="fence">Open fence state to populate when this line opens a fence.</param>
     /// <param name="html">Open html-block state to populate when this line opens an HTML block.</param>
@@ -336,6 +337,7 @@ public static class BlockScanner
     /// <returns>Detected <see cref="BlockKind"/>.</returns>
     private static BlockKind ClassifyContentLine(
         ReadOnlySpan<byte> body,
+        int indent,
         BlockKind prevKind,
         ref FenceState fence,
         ref HtmlBlockState html,
@@ -347,7 +349,7 @@ public static class BlockScanner
             return BlockKind.Paragraph;
         }
 
-        if (TryClassifyFenceOpen(body, ref fence, out level))
+        if (TryClassifyFenceOpen(body, indent, ref fence, out level))
         {
             return BlockKind.FencedCode;
         }
@@ -384,11 +386,11 @@ public static class BlockScanner
     /// <summary>Handles a line while a fenced code block is open.</summary>
     /// <param name="line">UTF-8 bytes.</param>
     /// <param name="fence">Open fence state; cleared when the closing fence is hit.</param>
-    /// <param name="level">Fence-length echo on close, otherwise zero.</param>
+    /// <param name="level">Fence-length echo on close, otherwise the indent of the opening fence.</param>
     /// <returns><see cref="BlockKind.FencedCode"/> on the closing line; otherwise <see cref="BlockKind.FencedCodeContent"/>.</returns>
     private static BlockKind ClassifyInsideFence(ReadOnlySpan<byte> line, ref FenceState fence, out int level)
     {
-        level = 0;
+        level = fence.Indent;
         var indent = LeadingIndent(line);
         if (indent >= IndentedCodeColumn)
         {
@@ -491,10 +493,11 @@ public static class BlockScanner
 
     /// <summary>Recognizes an open fenced-code-block line and stamps the fence state.</summary>
     /// <param name="body">Indent-trimmed line.</param>
+    /// <param name="indent">Number of leading indent bytes removed from the line to form <paramref name="body"/>.</param>
     /// <param name="fence">Fence state to populate on success.</param>
     /// <param name="level">Fence run length on success.</param>
     /// <returns>True when <paramref name="body"/> opens a fence.</returns>
-    private static bool TryClassifyFenceOpen(ReadOnlySpan<byte> body, ref FenceState fence, out int level)
+    private static bool TryClassifyFenceOpen(ReadOnlySpan<byte> body, int indent, ref FenceState fence, out int level)
     {
         level = 0;
         if (body.IsEmpty)
@@ -527,7 +530,7 @@ public static class BlockScanner
             }
         }
 
-        fence = new(marker, run);
+        fence = new(marker, run, indent);
         level = run;
         return true;
     }
@@ -926,7 +929,8 @@ public static class BlockScanner
     /// <summary>Open-fence state held across lines during a single scan.</summary>
     /// <param name="Marker">Fence delimiter byte.</param>
     /// <param name="Length">Opening fence length.</param>
-    private readonly record struct FenceState(byte Marker, int Length)
+    /// <param name="Indent">Indent of the opening fence line, removed from content lines.</param>
+    private readonly record struct FenceState(byte Marker, int Length, int Indent)
     {
         /// <summary>Gets a value indicating whether a fence is currently open.</summary>
         public bool IsOpen => Length > 0;

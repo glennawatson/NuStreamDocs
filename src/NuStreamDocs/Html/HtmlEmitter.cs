@@ -181,6 +181,7 @@ public static class HtmlEmitter
     private static ReadOnlySpan<byte> ExtractFenceInfoLine(ReadOnlySpan<byte> source, in BlockSpan opener)
     {
         var line = source.Slice(opener.Start, opener.Length);
+        line = line[SkipSpaces(line, 0)..];
         var marker = !line.IsEmpty && line[0] == (byte)'~' ? (byte)'~' : (byte)'`';
         var i = 0;
         while (i < line.Length && line[i] == marker)
@@ -288,13 +289,13 @@ public static class HtmlEmitter
         return closerIndex;
     }
 
-    /// <summary>Writes one fenced-code body line, HTML-escaped, with a trailing newline.</summary>
+    /// <summary>Writes one fenced-code body line without the opening fence's indent, HTML-escaped, with a trailing newline.</summary>
     /// <param name="source">UTF-8 source.</param>
     /// <param name="block">Content block.</param>
     /// <param name="writer">UTF-8 sink.</param>
     private static void EmitCodeContentLine(ReadOnlySpan<byte> source, in BlockSpan block, IBufferWriter<byte> writer)
     {
-        var line = source.Slice(block.Start, block.Length);
+        var line = StripContentIndent(source.Slice(block.Start, block.Length), block.Level);
         HtmlEscape.EscapeText(line, writer);
         Write("\n"u8, writer);
     }

@@ -8,7 +8,7 @@ namespace NuStreamDocs.Markdown;
 /// <param name="Kind">Classified block kind.</param>
 /// <param name="Start">Start byte offset in the source UTF-8 buffer.</param>
 /// <param name="Length">Length in bytes of the full block.</param>
-/// <param name="Level">Heading level / list indent / fence length, kind-dependent (0..6 for ATX).</param>
+/// <param name="Level">Heading level / list indent / fence length / fenced-content indent, kind-dependent (0..6 for ATX).</param>
 [System.Diagnostics.DebuggerDisplay("BlockSpan: {ToString(),nq}")]
 public readonly record struct BlockSpan(
     BlockKind Kind,
