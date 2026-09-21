@@ -17,6 +17,15 @@ public static class HtmlEmitter
     /// <summary>Highest CommonMark ATX heading level.</summary>
     private const int MaxHeadingLevel = 6;
 
+    /// <summary>Maximum digits read from an ordered-list marker; CommonMark caps markers at nine so the value fits an <see cref="int"/>.</summary>
+    private const int MaxOrderedDigits = 9;
+
+    /// <summary>Radix of the ordered-list marker digits.</summary>
+    private const int DecimalBase = 10;
+
+    /// <summary>Buffer size that fits any formatted <see cref="int"/>.</summary>
+    private const int MaxFormattedIntLength = 11;
+
     /// <summary>Open-tag UTF-8 literals indexed by heading level (index 0 unused).</summary>
     private static readonly byte[][] OpenTags =
     [
@@ -435,7 +444,7 @@ public static class HtmlEmitter
         return line[consumed..];
     }
 
-    /// <summary>Emits a contiguous run of <see cref="BlockKind.ListItem"/> + <see cref="BlockKind.ListItemContent"/> + <see cref="BlockKind.Blank"/> blocks as a single <c>&lt;ul&gt;</c>.</summary>
+    /// <summary>Emits a run of same-kind <see cref="BlockKind.ListItem"/> blocks and their bodies as a single <c>&lt;ul&gt;</c> or <c>&lt;ol&gt;</c>.</summary>
     /// <param name="source">UTF-8 source buffer.</param>
     /// <param name="blocks">Block descriptors.</param>
     /// <param name="start">Index of the first <see cref="BlockKind.ListItem"/>.</param>
@@ -443,8 +452,8 @@ public static class HtmlEmitter
     /// <returns>Index of the last block consumed; the outer loop's post-increment lands on the next sibling.</returns>
     /// <remarks>
     /// Items containing any blank-separated group become loose (every group wrapped in
-    /// <c>&lt;p&gt;</c>); a body line that is a thematic-break shape emits <c>&lt;hr/&gt;</c>. Nested
-    /// lists are not yet handled.
+    /// <c>&lt;p&gt;</c>); a body line that is a thematic-break shape emits <c>&lt;hr/&gt;</c>.
+    /// A nested list inside an item is rendered by scanning the item's de-indented body again.
     /// </remarks>
     private static int EmitList(
         ReadOnlySpan<byte> source,
@@ -452,17 +461,103 @@ public static class HtmlEmitter
         int start,
         IBufferWriter<byte> writer)
     {
-        Write("<ul>\n"u8, writer);
+        var firstLine = source.Slice(blocks[start].Start, blocks[start].Length);
+        var ordered = IsOrderedItemLine(firstLine);
+        EmitListOpen(firstLine, ordered, writer);
+
         var i = start;
-        while (i < blocks.Length && blocks[i].Kind is BlockKind.ListItem)
+        while (i < blocks.Length
+               && blocks[i].Kind is BlockKind.ListItem
+               && IsOrderedItemLine(source.Slice(blocks[i].Start, blocks[i].Length)) == ordered)
         {
             var itemEnd = FindItemEnd(blocks, i + 1);
             EmitListItem(source, blocks, i, itemEnd, writer);
             i = itemEnd;
         }
 
-        Write("</ul>\n"u8, writer);
+        Write(ordered ? "</ol>\n"u8 : "</ul>\n"u8, writer);
         return i - 1;
+    }
+
+    /// <summary>Writes the opening <c>&lt;ul&gt;</c> or <c>&lt;ol&gt;</c> tag; an ordered list whose first number is not 1 carries a <c>start</c> attribute.</summary>
+    /// <param name="firstLine">First item line of the list.</param>
+    /// <param name="ordered">True when the list is ordered.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private static void EmitListOpen(ReadOnlySpan<byte> firstLine, bool ordered, IBufferWriter<byte> writer)
+    {
+        if (!ordered)
+        {
+            Write("<ul>\n"u8, writer);
+            return;
+        }
+
+        var startNumber = ReadOrderedStart(firstLine);
+        if (startNumber is 1)
+        {
+            Write("<ol>\n"u8, writer);
+            return;
+        }
+
+        Write("<ol start=\""u8, writer);
+        var digits = writer.GetSpan(MaxFormattedIntLength);
+        _ = startNumber.TryFormat(digits, out var written);
+        writer.Advance(written);
+        Write("\">\n"u8, writer);
+    }
+
+    /// <summary>True when the list-item line opens with a digit run (an ordered marker) rather than a bullet.</summary>
+    /// <param name="line">UTF-8 list-item line.</param>
+    /// <returns>True for an ordered item.</returns>
+    private static bool IsOrderedItemLine(ReadOnlySpan<byte> line)
+    {
+        var i = SkipSpaces(line, 0);
+        return i < line.Length && AsciiByteHelpers.IsAsciiDigit(line[i]);
+    }
+
+    /// <summary>Reads the number of an ordered list-item marker, saturating at <see cref="MaxOrderedDigits"/> digits.</summary>
+    /// <param name="line">UTF-8 ordered-item line.</param>
+    /// <returns>The marker's number.</returns>
+    private static int ReadOrderedStart(ReadOnlySpan<byte> line)
+    {
+        var i = SkipSpaces(line, 0);
+        var value = 0;
+        for (var digits = 0; i < line.Length && digits < MaxOrderedDigits && AsciiByteHelpers.IsAsciiDigit(line[i]); digits++)
+        {
+            value = (value * DecimalBase) + (line[i] - (byte)'0');
+            i++;
+        }
+
+        return value;
+    }
+
+    /// <summary>True when <paramref name="line"/> opens a bullet or ordered list item.</summary>
+    /// <param name="line">De-indented item-body line.</param>
+    /// <returns>True when the line starts a list item and is not a thematic break.</returns>
+    private static bool StartsListItem(ReadOnlySpan<byte> line)
+    {
+        var i = SkipSpaces(line, 0);
+        if (i >= line.Length || IsThematicBreakLine(line))
+        {
+            return false;
+        }
+
+        var markerEnd = IsOrderedItemLine(line) ? SkipOrderedMarker(line, i) : SkipMarker(line, i);
+        return markerEnd > i && (markerEnd == line.Length || AsciiByteHelpers.IsAsciiHorizontalWhitespace(line[markerEnd]));
+    }
+
+    /// <summary>Advances past a digit run and its closing <c>.</c> or <c>)</c> at <paramref name="index"/>.</summary>
+    /// <param name="line">UTF-8 line.</param>
+    /// <param name="index">Offset of the first digit.</param>
+    /// <returns>Offset just past the delimiter, or <paramref name="index"/> when the digits are not followed by one.</returns>
+    private static int SkipOrderedMarker(ReadOnlySpan<byte> line, int index)
+    {
+        var i = index;
+        while (i < line.Length && AsciiByteHelpers.IsAsciiDigit(line[i]))
+        {
+            i++;
+        }
+
+        return i < line.Length && line[i] is (byte)'.' or (byte)')' ? i + 1 : index;
     }
 
     /// <summary>Returns the index past the last block belonging to the current <c>&lt;li&gt;</c>.</summary>
@@ -508,25 +603,102 @@ public static class HtmlEmitter
         IBufferWriter<byte> writer)
     {
         var openerLine = source.Slice(blocks[opener].Start, blocks[opener].Length);
-        var openerInline = AsciiByteHelpers.TrimTrailingNewline(StripBulletMarker(openerLine));
+        var openerInline = AsciiByteHelpers.TrimTrailingNewline(StripListMarker(openerLine));
         var contentIndent = ContentIndentFromContinuations(blocks, opener + 1, end);
-        var loose = HasBlankSeparator(blocks, opener + 1, end);
+        var nestedStart = FindNestedListStart(source, blocks, opener + 1, end, contentIndent);
+        var loose = HasBlankSeparator(blocks, opener + 1, nestedStart);
 
         Write("<li>"u8, writer);
 
         if (loose)
         {
-            EmitLooseGroup(source, blocks, opener, end, openerInline, contentIndent, writer);
+            EmitLooseGroup(source, blocks, opener, nestedStart, openerInline, contentIndent, writer);
         }
         else
         {
             // Tight item: emit the opener inline directly, then any continuation lines
             // separated by `<br/>`-equivalent line breaks (here just newlines for inline render).
             InlineRenderer.Render(openerInline, writer);
-            EmitTightContinuations(source, blocks, opener + 1, end, contentIndent, writer);
+            EmitTightContinuations(source, blocks, opener + 1, nestedStart, contentIndent, writer);
+            if (nestedStart < end)
+            {
+                Write("\n"u8, writer);
+            }
+        }
+
+        if (nestedStart < end)
+        {
+            EmitNestedContent(source, blocks, nestedStart, end, contentIndent, writer);
         }
 
         Write("</li>\n"u8, writer);
+    }
+
+    /// <summary>Returns the index of the first continuation block that opens a nested list, or <paramref name="end"/> when the item has none.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="blocks">Block descriptors.</param>
+    /// <param name="start">First continuation index.</param>
+    /// <param name="end">Exclusive end.</param>
+    /// <param name="contentIndent">Column to strip from each continuation line.</param>
+    /// <returns>Index of the nested list's first line, or <paramref name="end"/>.</returns>
+    private static int FindNestedListStart(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int start,
+        int end,
+        int contentIndent)
+    {
+        for (var i = start; i < end; i++)
+        {
+            if (blocks[i].Kind is not BlockKind.ListItemContent)
+            {
+                continue;
+            }
+
+            if (StartsListItem(StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent)))
+            {
+                return i;
+            }
+        }
+
+        return end;
+    }
+
+    /// <summary>Renders the blocks in [<paramref name="start"/>, <paramref name="end"/>) of a list item as a nested document, after removing the item's content indent.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="blocks">Block descriptors.</param>
+    /// <param name="start">Inclusive start; the first line of the nested list.</param>
+    /// <param name="end">Exclusive end.</param>
+    /// <param name="contentIndent">Column to strip from each line.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    private static void EmitNestedContent(
+        ReadOnlySpan<byte> source,
+        in ReadOnlySpan<BlockSpan> blocks,
+        int start,
+        int end,
+        int contentIndent,
+        IBufferWriter<byte> writer)
+    {
+        var length = 0;
+        for (var i = start; i < end; i++)
+        {
+            length += StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent).Length + 1;
+        }
+
+        var nestedSource = new byte[length];
+        var offset = 0;
+        for (var i = start; i < end; i++)
+        {
+            var line = StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent);
+            line.CopyTo(nestedSource.AsSpan(offset));
+            offset += line.Length;
+            nestedSource[offset] = (byte)'\n';
+            offset++;
+        }
+
+        ArrayBufferWriter<BlockSpan> nestedBlocks = new(end - start);
+        _ = BlockScanner.Scan(nestedSource, nestedBlocks);
+        Emit(nestedSource, nestedBlocks.WrittenSpan, writer);
     }
 
     /// <summary>Returns the content indent recorded on the first continuation block, or 0 when none.</summary>
@@ -758,13 +930,13 @@ public static class HtmlEmitter
         return count >= MinThematicRuns;
     }
 
-    /// <summary>Strips a bullet marker (<c>-</c>, <c>*</c>, <c>+</c>) and the run of whitespace that follows it from the start of <paramref name="line"/>.</summary>
+    /// <summary>Strips a bullet (<c>-</c>, <c>*</c>, <c>+</c>) or ordered (<c>1.</c>, <c>1)</c>) marker and the run of whitespace that follows it from the start of <paramref name="line"/>.</summary>
     /// <param name="line">UTF-8 list-item line.</param>
     /// <returns>The post-marker content span, with the trailing newline (if any) stripped.</returns>
-    private static ReadOnlySpan<byte> StripBulletMarker(ReadOnlySpan<byte> line)
+    private static ReadOnlySpan<byte> StripListMarker(ReadOnlySpan<byte> line)
     {
         var i = SkipSpaces(line, 0);
-        i = SkipMarker(line, i);
+        i = IsOrderedItemLine(line) ? SkipOrderedMarker(line, i) : SkipMarker(line, i);
         i = SkipSpaces(line, i);
         return AsciiByteHelpers.TrimTrailingNewline(line[i..]);
     }
