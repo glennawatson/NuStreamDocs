@@ -25,6 +25,9 @@ public static class LinkReferenceRewriter
     /// <summary>Maximum indentation before a reference definition.</summary>
     private const int MaxDefinitionIndent = 3;
 
+    /// <summary>Length of a title's opening and closing delimiters.</summary>
+    private const int MinTitleLength = 2;
+
     /// <summary>Maximum label length stored on the stack.</summary>
     private const int MaxStackLabelLength = 256;
 
@@ -264,18 +267,45 @@ public static class LinkReferenceRewriter
         return true;
     }
 
-    /// <summary>Emits <c>[text](href)</c> into <paramref name="writer"/>.</summary>
+    /// <summary>Emits <c>[text](href "title")</c> into <paramref name="writer"/>.</summary>
     /// <param name="text">Visible label bytes.</param>
     /// <param name="def">Resolved definition.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    /// <remarks>CommonMark link titles are dropped — the downstream <c>LinkSpan</c> parser treats the entire <c>(…)</c> body as the href.</remarks>
     private static void EmitInlineLink(ReadOnlySpan<byte> text, in Definition def, IBufferWriter<byte> writer)
     {
         Write(writer, "["u8);
         Write(writer, text);
         Write(writer, "]("u8);
         Write(writer, def.Href);
+        if (def.Title is [_, ..])
+        {
+            Write(writer, " \""u8);
+            WriteTitle(writer, def.Title);
+            Write(writer, "\""u8);
+        }
+
         Write(writer, ")"u8);
+    }
+
+    /// <summary>Writes title bytes with each double quote as an entity so the title cannot end the inline link's quoted title early.</summary>
+    /// <param name="writer">UTF-8 sink.</param>
+    /// <param name="title">Title bytes without delimiters.</param>
+    private static void WriteTitle(IBufferWriter<byte> writer, ReadOnlySpan<byte> title)
+    {
+        var remaining = title;
+        while (!remaining.IsEmpty)
+        {
+            var quote = remaining.IndexOf((byte)'"');
+            if (quote < 0)
+            {
+                Write(writer, remaining);
+                return;
+            }
+
+            Write(writer, remaining[..quote]);
+            Write(writer, "&quot;"u8);
+            remaining = remaining[(quote + 1)..];
+        }
     }
 
     /// <summary>Resolves a reference label against the definition map.</summary>
@@ -318,7 +348,7 @@ public static class LinkReferenceRewriter
             var lineEnd = Utf8LineSpan.LfLineEnd(source, pos);
             if (TryParseDefinitionLine(source, pos, lineEnd, out var def))
             {
-                _ = map.TryAdd(def.Key, new(def.Href.ToArray()));
+                _ = map.TryAdd(def.Key, new(def.Href.ToArray(), def.Title.ToArray()));
             }
 
             pos = lineEnd;
@@ -345,13 +375,41 @@ public static class LinkReferenceRewriter
             return false;
         }
 
-        if (!TryParseDefinitionHref(source, afterColon, lineEnd, out var hrefBytes, out _))
+        if (!TryParseDefinitionHref(source, afterColon, lineEnd, out var hrefBytes, out var afterHref))
         {
             return false;
         }
 
-        parsed = new(NormalizeLabel(label), hrefBytes);
+        var titleStart = SkipSpaces(source, afterHref, lineEnd);
+        var titleBytes = titleStart > afterHref ? ParseDefinitionTitle(source, titleStart, lineEnd) : default;
+        parsed = new(NormalizeLabel(label), hrefBytes, titleBytes);
         return true;
+    }
+
+    /// <summary>Parses the optional quoted or parenthesized title that follows a definition's URL.</summary>
+    /// <param name="source">UTF-8 source.</param>
+    /// <param name="start">Cursor at the first byte after the whitespace that follows the URL.</param>
+    /// <param name="lineEnd">End of the line.</param>
+    /// <returns>The title bytes without their delimiters, or an empty span when there is no well-formed title.</returns>
+    private static ReadOnlySpan<byte> ParseDefinitionTitle(ReadOnlySpan<byte> source, int start, int lineEnd)
+    {
+        var closer = source[start] switch
+        {
+            (byte)'"' => '"',
+            (byte)'\'' => '\'',
+            (byte)'(' => ')',
+            _ => '\0'
+        };
+
+        var end = lineEnd;
+        while (end > start && AsciiByteHelpers.IsAsciiWhitespace(source[end - 1]))
+        {
+            end--;
+        }
+
+        return closer != '\0' && end - start >= MinTitleLength && source[end - 1] == closer
+            ? source[(start + 1)..(end - 1)]
+            : default;
     }
 
     /// <summary>Parses the <c>[label]:</c> prefix of a definition line.</summary>
@@ -633,9 +691,10 @@ public static class LinkReferenceRewriter
         writer.Advance(bytes.Length);
     }
 
-    /// <summary>Stored definition entry — owned UTF-8 href bytes.</summary>
+    /// <summary>Stored definition entry — owned UTF-8 href and title bytes.</summary>
     /// <param name="Href">URL bytes (without surrounding angle brackets).</param>
-    private readonly record struct Definition(byte[] Href);
+    /// <param name="Title">Title bytes (without delimiters); empty when the definition has no title.</param>
+    private readonly record struct Definition(byte[] Href, byte[] Title);
 
     /// <summary>Transient parse result used during the collection pass.</summary>
     private readonly ref struct ParsedDefinition
@@ -643,11 +702,16 @@ public static class LinkReferenceRewriter
         /// <summary>Initializes a new instance of the <see cref="ParsedDefinition"/> struct.</summary>
         /// <param name="key">Case-folded label key.</param>
         /// <param name="href">Href bytes.</param>
-        public ParsedDefinition(string key, ReadOnlySpan<byte> href)
+        /// <param name="title">Title bytes without delimiters, or empty.</param>
+        public ParsedDefinition(string key, ReadOnlySpan<byte> href, ReadOnlySpan<byte> title)
         {
             Key = key;
             Href = href;
+            Title = title;
         }
+
+        /// <summary>Gets the title byte slice into the source; empty when the definition has no title.</summary>
+        public ReadOnlySpan<byte> Title { get; }
 
         /// <summary>Gets the case-folded label key.</summary>
         public string Key { get; }
