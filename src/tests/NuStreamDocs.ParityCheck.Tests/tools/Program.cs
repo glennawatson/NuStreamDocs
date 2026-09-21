@@ -14,7 +14,6 @@
 #:include TestRowEmitter.cs
 #:property PublishAot=false
 
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace NuStreamDocs.ParityCheck.Tests;
@@ -25,16 +24,22 @@ public static class Program
     /// <summary>Exit code for a usage error.</summary>
     private const int UsageError = 2;
 
+    /// <summary>Runtime property that holds the directory of the file-based app's entry file.</summary>
+    private const string EntryPointDirectoryKey = "EntryPointFileDirectoryPath";
+
     /// <summary>Runs the tool.</summary>
     /// <param name="args">Command-line arguments; see the project README.</param>
     /// <returns>0 on success, 1 when a fragment fails or the reference environment cannot be prepared, 2 for a usage error.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<int> Main(string[] args) => RunAsync(args, ProjectDirectory());
+    public static async Task<int> Main(string[] args)
+    {
+        if (AppContext.GetData(EntryPointDirectoryKey) is not string toolsDirectory || Path.GetDirectoryName(toolsDirectory) is not { } projectDirectory)
+        {
+            await Console.Error.WriteLineAsync("Run the tool with 'dotnet run --file tools/Program.cs' from the project directory.");
+            return UsageError;
+        }
 
-    /// <summary>Gets the directory of the parity test project, derived from the location of this source file.</summary>
-    /// <param name="sourceFile">Path of this source file, supplied by the compiler.</param>
-    /// <returns>The project directory.</returns>
-    private static string ProjectDirectory([CallerFilePath] string sourceFile = "") => Path.GetDirectoryName(Path.GetDirectoryName(sourceFile))!;
+        return await RunAsync(args, projectDirectory);
+    }
 
     /// <summary>Runs the tool against a project directory.</summary>
     /// <param name="args">Command-line arguments.</param>
