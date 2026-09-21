@@ -162,6 +162,19 @@ per-method-call overhead). Use the right pass for the right question:
   `[EventPipeProfiler(...)]` attribute for that. The CLI flag is fine for one-off runs where you only need the bundled
   diagnoser plumbing.
 
+### Markdown rendering parity
+
+The core renderer (`BlockScanner`, `HtmlEmitter`, `InlineRenderer`, `TabExpander`) targets MkDocs / Python-Markdown output
+for basic Markdown and stays compatible with Zensical. Where they differ, follow MkDocs unless its behavior is clearly a
+bug; where Zensical deliberately and documentedly deviates for a reason that affects us, follow Zensical. The deliberate
+CommonMark-side deviations are listed in the README under "Core Markdown rendering" and stay as they are.
+
+- Every rendering fix ships as its own commit with focused tests through `MarkdownRenderer.Render`.
+- New scanning logic works on UTF-8 spans and starts with a cheap exit when its syntax is absent (see `TabExpander`,
+  `LinkReferenceRewriter.MayContainReferences`).
+- Nested content (list items, block quotes) is rendered by scanning the de-indented body again; keep that recursion
+  bounded by the input and avoid per-line allocations on the no-nesting path.
+
 ### Zensical render-smoke
 
 This repository currently uses TUnit/MTP-focused project tests under `src/tests/`; keep new test projects aligned with
@@ -288,6 +301,10 @@ tests because they're style-not-perf.
 
 ### Allocation discipline
 
+- **No regular expressions.** `System.Text.RegularExpressions`, `[GeneratedRegex]` and `new Regex(...)` are banned in
+  every project. To replace one, port it in a temporary out-of-repo .NET app using the source generator, read the
+  generated matcher to learn its exact behavior, then write a purpose-built UTF-8 scanner or state machine for that one
+  case with equivalence and edge-case tests. Never swap in another general pattern engine.
 - **Zero-LINQ policy.** No `System.Linq` in production code. LINQ pulls in lambdas + iterators on every call. Use plain
   `for` loops.
 - **Avoid `foreach` whenever a `for` loop with an indexer works.** `foreach` over `IEnumerable<T>` boxes/allocates an

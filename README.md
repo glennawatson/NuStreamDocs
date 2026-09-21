@@ -222,7 +222,7 @@ links to the package on NuGet — the badge tracks the current published version
 |----------------------------------------------|---------------------------------------|--------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`NuStreamDocs.Nav`][Nav]                    | [![ver][NavV]][Nav]                   | `.UseNav()`                                | Glob includes, ordering hints, hidden sections, `.pages` overrides, `navigation.prune`, orphan-page warnings.                                                                                                                                                                                               |
 | [`NuStreamDocs.Toc`][Toc]                    | [![ver][TocV]][Toc]                   | `.UseToc()`                                | Per-page table of contents and permalink heading anchors.                                                                                                                                                                                                                                                   |
-| [`NuStreamDocs.Highlight`][Highlight]        | [![ver][HighlightV]][Highlight]       | `.UseHighlight()`                          | Server-side syntax highlighting. TextMate JSON grammars + `[GeneratedRegex]`. Wraps blocks in `<div class="highlight">` (Pygments / mkdocs-material convention); reads per-block fence-info attrs (`title="..."` for filename bar, opt-in copy button). No JS runtime.                                      |
+| [`NuStreamDocs.Highlight`][Highlight]        | [![ver][HighlightV]][Highlight]       | `.UseHighlight()`                          | Server-side syntax highlighting with purpose-built UTF-8 lexers. Wraps blocks in `<div class="highlight">` (Pygments / mkdocs-material convention); reads per-block fence-info attrs (`title="..."` for filename bar, opt-in copy button). No JS runtime.                                      |
 | [`NuStreamDocs.Search`][Search]              | [![ver][SearchV]][Search]             | (base; pair with one of the engines below) | Shared `SearchPluginBase`, head-extra wiring, section-priority meta.                                                                                                                                                                                                                                        |
 | [`NuStreamDocs.Search.Pagefind`][Pagefind]   | [![ver][PagefindV]][Pagefind]         | `.UsePagefindSearch()`                     | Pagefind WASM index with snippets. Ships per-RID native binary; runs the CLI at finalize.                                                                                                                                                                                                                   |
 | [`NuStreamDocs.Search.Lunr`][Lunr]           | [![ver][LunrV]][Lunr]                 | `.UseLunrSearch()`                         | Lunr-compatible JSON index. Pure-JS runtime, no native binary.                                                                                                                                                                                                                                              |
@@ -578,6 +578,26 @@ Each is a separate assembly so you only pull what you use:
 [ApiV]: https://img.shields.io/nuget/v/NuStreamDocs.CSharpApiGenerator.svg?label=
 
 ---
+
+## Core Markdown rendering
+
+The core renderer turns UTF-8 Markdown into HTML in a single pass with no regular expressions. Its output targets MkDocs (Python-Markdown) and is compatible with Zensical for the basics:
+
+- ATX and setext headings (a closing `#` run is dropped), paragraphs, hard breaks (two trailing spaces), thematic breaks.
+- Emphasis and strong with nesting, links and images with quoted titles and `<angle>` destinations, URL and email autolinks, code spans, reference links.
+- Fenced, tilde-fenced and indented code, block quotes (including lazy continuation and nesting), HTML blocks, tab-indented content.
+- Ordered, bullet and nested lists with tight and loose items; a list item body may hold paragraphs, code, headings, quotes and further lists.
+
+Intentional deviations from Python-Markdown, where the CommonMark behavior is kept:
+
+- A nested list needs only the parent item's content indent, not four spaces.
+- A list can start directly after a paragraph line without a blank line.
+- Ordered lists emit `<ol start="N">`, and a change of marker kind starts a new list.
+- A list is loose as a whole, not item by item.
+- `#hashtag` (no space after `#`) is text, not a heading.
+- An HTML block ends at the first blank line.
+- Every ASCII punctuation character can be backslash-escaped.
+- Email autolinks are plain `mailto:` links, not entity-obfuscated.
 
 ## Markdown extensions
 
@@ -957,7 +977,7 @@ options-customizer+logger).
 | **`NuStreamDocs.Nav`**                | `.UseNav()`                                                  | Rich navigation: glob includes, ordering hints, hidden sections, `.pages` overrides, multi-level rewrites, `navigation.prune`, orphan-page warnings.                                                                                                                                                           |
 | **`NuStreamDocs.Toc`**                | `.UseToc()`                                                  | Per-page table of contents and permalink heading anchors.                                                                                                                                                                                                                                                      |
 | **`NuStreamDocs.Search`**             | `.UseSearch()`                                               | Build-time search index. Pagefind-compatible sharded index by default; Lunr-compatible JSON alt.                                                                                                                                                                                                               |
-| **`NuStreamDocs.Highlight`**          | `.UseHighlight()`                                            | Server-side syntax highlighter. Pygments-shape lexers via `[GeneratedRegex]`. Pygments short-form CSS classes; wraps blocks in `<div class="highlight">`. Per-block extras: `title="..."` (filename bar), opt-in copy button. Reads fence-info from the markdown emitter's `data-info` attr. No JS, no Python. |
+| **`NuStreamDocs.Highlight`**          | `.UseHighlight()`                                            | Server-side syntax highlighter. Pygments-shape purpose-built UTF-8 lexers. Pygments short-form CSS classes; wraps blocks in `<div class="highlight">`. Per-block extras: `title="..."` (filename bar), opt-in copy button. Reads fence-info from the markdown emitter's `data-info` attr. No JS, no Python. |
 | **`NuStreamDocs.MarkdownExtensions`** | `.UseCommonMarkdownExtensions()`                             | Common Markdown block + inline extensions — admonitions, tabs, details, checklists, mark, footnotes, definition lists, attr-list, etc.                                                                                                                                                                         |
 | **`NuStreamDocs.Mermaid`**            | `.UseMermaid()`                                              | Retags fenced `mermaid` blocks; pulls the Mermaid runtime into the head.                                                                                                                                                                                                                                       |
 | **`NuStreamDocs.Lightbox`**           | `.UseLightbox()`                                             | glightbox image lightbox — adds glightbox CSS/JS and wraps content images.                                                                                                                                                                                                                                     |
