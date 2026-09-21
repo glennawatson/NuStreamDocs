@@ -320,6 +320,9 @@ public class PrivacyPluginLifecycleTests
     /// <summary>Tiny HttpListener-backed server for loopback fetches.</summary>
     private sealed class LoopbackHttpServer : IAsyncDisposable
     {
+        /// <summary>Maximum number of attempts to bind the HTTP listener before giving up.</summary>
+        private const int MaxListenerBindAttempts = 3;
+
         /// <summary>Routes registered before <c>Start</c> is called.</summary>
         private readonly Dictionary<string, (string ContentType, byte[] Bytes)> _routes = [with(StringComparer.Ordinal)];
 
@@ -363,14 +366,30 @@ public class PrivacyPluginLifecycleTests
             _hits[absolutePath] = 0;
         }
 
-        /// <summary>Picks a free port and starts the listener.</summary>
+        /// <summary>Picks a free port and starts the listener, retrying if the port is taken by another process.</summary>
         public void Start()
         {
-            var port = GetFreePort();
-            BaseUrl = $"http://127.0.0.1:{port}/";
-            _listener.Prefixes.Add(BaseUrl);
-            _listener.Start();
-            _pump = Task.Run(() => Pump(_cts.Token), _cts.Token);
+            for (var attempt = 0; attempt < MaxListenerBindAttempts; attempt++)
+            {
+                _listener.Prefixes.Clear();
+                var port = GetFreePort();
+                BaseUrl = $"http://127.0.0.1:{port}/";
+                _listener.Prefixes.Add(BaseUrl);
+
+                try
+                {
+                    _listener.Start();
+                    _pump = Task.Run(() => Pump(_cts.Token), _cts.Token);
+                    return;
+                }
+                catch (HttpListenerException)
+                {
+                    if (attempt == MaxListenerBindAttempts - 1)
+                    {
+                        throw;
+                    }
+                }
+            }
         }
 
         /// <summary>Returns the number of requests served for <paramref name="absolutePath"/>.</summary>
