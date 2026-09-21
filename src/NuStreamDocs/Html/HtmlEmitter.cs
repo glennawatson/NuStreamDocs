@@ -30,9 +30,6 @@ public static class HtmlEmitter
     /// <summary>Initial block capacity for a list item or block-quote body scanned on its own.</summary>
     private const int InitialNestedBlockCapacity = 8;
 
-    /// <summary>Initial byte capacity for a block-quote body.</summary>
-    private const int InitialQuoteBodyCapacity = 256;
-
     /// <summary>Bytes that can begin a block other than a paragraph (digits are checked separately).</summary>
     private static readonly SearchValues<byte> BlockMarkerBytes = SearchValues.Create("#>-*+_`~<"u8);
 
@@ -589,7 +586,8 @@ public static class HtmlEmitter
         int start,
         IBufferWriter<byte> writer)
     {
-        ArrayBufferWriter<byte> body = new(InitialQuoteBodyCapacity);
+        using var rental = NestedContentScratch.Rent();
+        var body = rental.Scratch.Body;
         var last = start;
         var canContinueLazily = false;
         for (var i = start; i < blocks.Length; i++)
@@ -830,10 +828,12 @@ public static class HtmlEmitter
             return false;
         }
 
-        var body = BuildItemBody(source, blocks, opener, end);
+        using var rental = NestedContentScratch.Rent();
+        var body = rental.Scratch.Body;
+        BuildItemBody(source, blocks, opener, end, body);
         ArrayBufferWriter<BlockSpan> bodyBlocks = new(InitialNestedBlockCapacity);
-        _ = BlockScanner.Scan(body, bodyBlocks);
-        return HasBlankBetweenChildren(body, bodyBlocks.WrittenSpan);
+        _ = BlockScanner.Scan(body.WrittenSpan, bodyBlocks);
+        return HasBlankBetweenChildren(body.WrittenSpan, bodyBlocks.WrittenSpan);
     }
 
     /// <summary>True when a <see cref="BlockKind.Blank"/> in [<paramref name="start"/>, <paramref name="end"/>) is followed by a non-blank block in the same range.</summary>
@@ -975,7 +975,10 @@ public static class HtmlEmitter
         }
         else
         {
-            EmitItemBody(BuildItemBody(source, blocks, opener, end), loose, writer);
+            using var rental = NestedContentScratch.Rent();
+            var body = rental.Scratch.Body;
+            BuildItemBody(source, blocks, opener, end, body);
+            EmitItemBody(body.WrittenSpan, loose, writer);
         }
 
         Write("</li>\n"u8, writer);
@@ -1009,12 +1012,13 @@ public static class HtmlEmitter
     /// <param name="blocks">Block descriptors.</param>
     /// <param name="opener">Index of the <see cref="BlockKind.ListItem"/> block.</param>
     /// <param name="end">Exclusive end of the item.</param>
-    /// <returns>Newline-terminated item body.</returns>
-    private static byte[] BuildItemBody(
+    /// <param name="body">Sink that receives the newline-terminated item body.</param>
+    private static void BuildItemBody(
         ReadOnlySpan<byte> source,
         in ReadOnlySpan<BlockSpan> blocks,
         int opener,
-        int end)
+        int end,
+        ArrayBufferWriter<byte> body)
     {
         var openerContent = StripListMarker(source.Slice(blocks[opener].Start, blocks[opener].Length));
         var contentIndent = ContentIndentFromContinuations(blocks, opener + 1, end);
@@ -1025,29 +1029,29 @@ public static class HtmlEmitter
             length += StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent).Length + 1;
         }
 
-        var body = new byte[length];
-        openerContent.CopyTo(body);
+        var destination = body.GetSpan(length);
+        openerContent.CopyTo(destination);
         var offset = openerContent.Length;
-        body[offset] = (byte)'\n';
+        destination[offset] = (byte)'\n';
         offset++;
 
         for (var i = opener + 1; i < end; i++)
         {
             var line = StripContentIndent(source.Slice(blocks[i].Start, blocks[i].Length), contentIndent);
-            line.CopyTo(body.AsSpan(offset));
+            line.CopyTo(destination[offset..]);
             offset += line.Length;
-            body[offset] = (byte)'\n';
+            destination[offset] = (byte)'\n';
             offset++;
         }
 
-        return body;
+        body.Advance(length);
     }
 
     /// <summary>Renders an item body as a nested document; a tight item leaves its paragraphs unwrapped.</summary>
     /// <param name="body">De-indented item body.</param>
     /// <param name="loose">True when the owning list is loose.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    private static void EmitItemBody(byte[] body, bool loose, IBufferWriter<byte> writer)
+    private static void EmitItemBody(ReadOnlySpan<byte> body, bool loose, IBufferWriter<byte> writer)
     {
         ArrayBufferWriter<BlockSpan> bodyBlocks = new(InitialNestedBlockCapacity);
         _ = BlockScanner.Scan(body, bodyBlocks);
