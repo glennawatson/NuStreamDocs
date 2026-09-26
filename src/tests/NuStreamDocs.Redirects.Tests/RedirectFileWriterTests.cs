@@ -40,7 +40,7 @@ public class RedirectFileWriterTests
         await Assert.That(html).Contains("<a href=\"/new/path/\">/new/path/</a>");
     }
 
-    /// <summary>The default cache rules cover <c>/assets/*</c> then the more-specific <c>/assets/fonts/*</c>; the headers file lays them out as indented blocks.</summary>
+    /// <summary>The default cache rules cover the asset directories plus an immutable <c>/assets/fonts/*</c>; the headers file lays them out as indented blocks.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task HeadersFileFormat()
@@ -49,13 +49,34 @@ public class RedirectFileWriterTests
         ArrayBufferWriter<byte> sink = new();
         HeadersFileWriter.WriteHeadersFile(rules, sink);
         var text = Encoding.UTF8.GetString(sink.WrittenSpan);
-        await Assert.That(text).Contains("/assets/*\n  Cache-Control: public, max-age=604800\n\n");
+        await Assert.That(text).Contains("/assets/javascripts/*\n  Cache-Control: public, max-age=604800\n\n");
+        await Assert.That(text).Contains("/assets/stylesheets/*\n  Cache-Control: public, max-age=604800\n\n");
         await Assert.That(text).Contains("/assets/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n\n");
         await Assert.That(text).Contains("/api/*\n  X-Robots-Tag: noindex\n\n");
+    }
 
-        // /assets/fonts/* must come after /assets/* so it wins for font files.
-        await Assert.That(text.IndexOf("/assets/fonts/*", StringComparison.Ordinal))
-            .IsGreaterThan(text.IndexOf("/assets/*\n", StringComparison.Ordinal));
+    /// <summary>
+    /// No default rule matches font files except the font rule: Netlify and Cloudflare Pages comma-join
+    /// repeated headers from every matching rule.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task DefaultRulesDoNotOverlap()
+    {
+        var rules = HeadersFileWriter.DefaultRules();
+        var fontRules = 0;
+        for (var i = 0; i < rules.Length; i++)
+        {
+            var pattern = Encoding.UTF8.GetString(rules[i].PathPattern);
+            await Assert.That(pattern).IsNotEqualTo("/assets/*");
+            await Assert.That(pattern).EndsWith("/*");
+            if ("/assets/fonts/x.woff2".StartsWith(pattern[..^1], StringComparison.Ordinal))
+            {
+                fontRules++;
+            }
+        }
+
+        await Assert.That(fontRules).IsEqualTo(1);
     }
 
     /// <summary>An empty rule list produces no <c>_headers</c> output.</summary>

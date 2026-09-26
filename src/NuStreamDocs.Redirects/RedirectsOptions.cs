@@ -11,7 +11,10 @@ namespace NuStreamDocs.Redirects;
 /// <param name="EmitHeadersFile">When true, write a <c>_headers</c> file at the site root (only when there is at least one rule).</param>
 /// <param name="EmitMetaRefreshPages">When true, write a meta-refresh HTML page at each redirect's source path (the host-agnostic fallback).</param>
 /// <param name="ReadFrontmatterRedirects">When true, pick up <c>redirect_from</c> entries from page frontmatter.</param>
-/// <param name="DefaultCacheHeaders">When true, prepend default <c>_headers</c> rules: a one-week cache for <c>/assets/*</c> and an immutable cache for <c>/assets/fonts/*</c>.</param>
+/// <param name="DefaultCacheHeaders">
+/// When true, prepend default <c>_headers</c> rules: a one-week cache for the generated asset directories under <c>/assets/</c>
+/// and an immutable cache for <c>/assets/fonts/*</c>.
+/// </param>
 /// <param name="FrontmatterKey">UTF-8 frontmatter key read for redirect sources.</param>
 [System.Diagnostics.DebuggerDisplay("RedirectsOptions: {ToString(),nq}")]
 public readonly record struct RedirectsOptions(

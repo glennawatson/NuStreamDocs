@@ -9,14 +9,26 @@ namespace NuStreamDocs.Redirects;
 /// <summary>Formats <see cref="HeaderRule"/>s into the Netlify / Cloudflare-Pages <c>_headers</c> file, and supplies the default cache rules.</summary>
 public static class HeadersFileWriter
 {
+    /// <summary>Gets the one-week cache header applied to generated assets that aren't content-hashed.</summary>
+    private static ReadOnlySpan<byte> OneWeekCache => "Cache-Control: public, max-age=604800"u8;
+
     /// <summary>
-    /// Returns the default cache rules: a one-week cache for <c>/assets/*</c>, then an immutable cache for the content-hashed
-    /// <c>/assets/fonts/*</c> (after, so it wins for font files).
+    /// Returns the default cache rules: a one-week cache for the generated asset directories under <c>/assets/</c>, and an
+    /// immutable cache for the content-hashed <c>/assets/fonts/*</c>.
     /// </summary>
     /// <returns>The default rule blocks, in emit order.</returns>
+    /// <remarks>
+    /// The patterns never overlap: Netlify and Cloudflare Pages apply every matching rule and comma-join repeated headers,
+    /// so a broad <c>/assets/*</c> rule would give font files two conflicting <c>Cache-Control</c> values.
+    /// </remarks>
     public static HeaderRule[] DefaultRules() =>
     [
-        new([.. "/assets/*"u8], [[.. "Cache-Control: public, max-age=604800"u8]]),
+        new([.. "/assets/javascripts/*"u8], [[.. OneWeekCache]]),
+        new([.. "/assets/stylesheets/*"u8], [[.. OneWeekCache]]),
+        new([.. "/assets/images/*"u8], [[.. OneWeekCache]]),
+        new([.. "/assets/extra/*"u8], [[.. OneWeekCache]]),
+        new([.. "/assets/extensions/*"u8], [[.. OneWeekCache]]),
+        new([.. "/assets/external/*"u8], [[.. OneWeekCache]]),
         new([.. "/assets/fonts/*"u8], [[.. "Cache-Control: public, max-age=31536000, immutable"u8]])
     ];
 
