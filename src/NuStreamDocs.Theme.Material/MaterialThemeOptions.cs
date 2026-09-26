@@ -42,7 +42,7 @@ public readonly record struct MaterialThemeOptions(
 {
     /// <summary>Gets the default jsdelivr CDN root for the upstream Material bundle this assembly is pinned to.</summary>
     public static byte[] DefaultCdnRoot { get; } =
-        [.. "https://cdn.jsdelivr.net/gh/squidfunk/mkdocs-material@9.7.6/material/templates/assets"u8];
+        [.. "https://cdn.jsdelivr.net/gh/squidfunk/mkdocs-material@9.7.7/material/templates/assets"u8];
 
     /// <summary>Gets the default embedded-asset root URL prefix.</summary>
     public static byte[] DefaultEmbeddedAssetRoot { get; } = [.. "/assets"u8];
