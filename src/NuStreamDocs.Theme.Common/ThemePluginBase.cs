@@ -347,11 +347,18 @@ public abstract class ThemePluginBase<TTheme, TOptions> : IBuildConfigurePlugin,
     /// rendered page's canonical / repo / edit links.
     /// </summary>
     /// <param name="options">Theme options to validate.</param>
-    /// <exception cref="InvalidOperationException">When any URL option fails the shape check.</exception>
+    /// <exception cref="InvalidOperationException">When any URL option fails the shape check, or CDN assets have no root.</exception>
     private static void ValidateUrlOptions(TOptions options)
     {
         ThrowIfMalformed(ThemeUrlValidator.Inspect("SiteUrl", options.SiteUrl, false));
         ThrowIfMalformed(ThemeUrlValidator.Inspect("RepoUrl", options.RepoUrl, false));
+
+        // Without the local write the pages can only find their assets through the configured root.
+        if (!options.WriteEmbeddedAssets && options.ResolveAssetRoot().IsEmpty)
+        {
+            throw new InvalidOperationException(
+                "The theme is set to serve its assets from a CDN but no CDN root is configured; call WithCdnRoot(...) with the URL hosting the bundled assets.");
+        }
 
         // EditUri is a path fragment relative to RepoUrl, not an absolute URL on its own —
         // we only enforce the trailing-query/fragment guard here. Empty is fine (edit links

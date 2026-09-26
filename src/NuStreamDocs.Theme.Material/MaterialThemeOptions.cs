@@ -9,7 +9,10 @@ namespace NuStreamDocs.Theme.Material;
 /// <summary>Configuration for <see cref="MaterialThemePlugin"/>.</summary>
 /// <param name="AssetSource">Gets or sets the source of the assets.</param>
 /// <param name="EmbeddedAssetRoot">UTF-8 root path for embedded assets.</param>
-/// <param name="CdnRoot">UTF-8 root URL for assets hosted on a CDN.</param>
+/// <param name="CdnRoot">
+/// UTF-8 root URL of a CDN hosting this theme's bundled assets; required when <see cref="AssetSource"/> is
+/// <see cref="MaterialAssetSource.Cdn"/>.
+/// </param>
 /// <param name="SiteName">UTF-8 site title injected into every page.</param>
 /// <param name="SiteUrl">UTF-8 absolute site URL (e.g. <c>https://reactiveui.net</c>); empty when no canonical / og:url should be rendered. Mirrors mkdocs's <c>site_url</c>.</param>
 /// <param name="Language">UTF-8 HTML <c>lang</c> attribute value.</param>
@@ -40,10 +43,6 @@ public readonly record struct MaterialThemeOptions(
     bool EnableNavigationFooter,
     bool SectionScopedFooter) : IThemeShellOptions
 {
-    /// <summary>Gets the default jsdelivr CDN root for the upstream Material bundle this assembly is pinned to.</summary>
-    public static byte[] DefaultCdnRoot { get; } =
-        [.. "https://cdn.jsdelivr.net/gh/squidfunk/mkdocs-material@9.7.7/material/templates/assets"u8];
-
     /// <summary>Gets the default embedded-asset root URL prefix.</summary>
     public static byte[] DefaultEmbeddedAssetRoot { get; } = [.. "/assets"u8];
 
@@ -51,7 +50,7 @@ public readonly record struct MaterialThemeOptions(
     public static MaterialThemeOptions Default { get; } = new(
         MaterialAssetSource.Embedded,
         DefaultEmbeddedAssetRoot,
-        DefaultCdnRoot,
+        [],
         [],
         [],
         [.. "en"u8],

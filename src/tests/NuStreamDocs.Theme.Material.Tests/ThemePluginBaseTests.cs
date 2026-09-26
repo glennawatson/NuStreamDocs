@@ -175,11 +175,36 @@ public class ThemePluginBaseTests
         await new DocBuilder()
             .WithInput(fixture.Docs)
             .WithOutput(fixture.Site)
-            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { AssetSource = MaterialAssetSource.Cdn })
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi").WithCdnRoot("https://cdn.example.test/material") with { AssetSource = MaterialAssetSource.Cdn })
             .BuildAsync();
 
         var cssPath = Path.Combine(fixture.Site, "assets", "stylesheets", "material.min.css");
         await Assert.That(File.Exists(cssPath)).IsFalse();
+    }
+
+    /// <summary>CDN assets without a configured root fail the build instead of emitting broken asset links.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task CdnModeWithoutRootThrows()
+    {
+        using var fixture = TempBuildTree.Create();
+        await File.WriteAllTextAsync(Path.Combine(fixture.Docs, IntroSourcePath), IntroMarkdown);
+
+        var builder = new DocBuilder()
+            .WithInput(fixture.Docs)
+            .WithOutput(fixture.Site)
+            .UseMaterialTheme(static opts => opts.WithSiteName("Hi") with { AssetSource = MaterialAssetSource.Cdn });
+
+        await Assert.That(builder.BuildAsync).Throws<InvalidOperationException>();
+    }
+
+    /// <summary>The default options embed the assets and configure no CDN root.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task DefaultOptionsHaveNoCdnRoot()
+    {
+        await Assert.That(MaterialThemeOptions.Default.AssetSource).IsEqualTo(MaterialAssetSource.Embedded);
+        await Assert.That(MaterialThemeOptions.Default.CdnRoot).IsEmpty();
     }
 
     /// <summary>Footer enabled with a registered provider produces global prev/next links.</summary>

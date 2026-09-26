@@ -10,6 +10,6 @@ public enum Material3AssetSource
     /// <summary>Bundle the assets into the output directory.</summary>
     Embedded = 0,
 
-    /// <summary>Reference the assets from a CDN; skip the local write.</summary>
+    /// <summary>Reference the bundled assets from a CDN configured with <c>WithCdnRoot</c>; skip the local write.</summary>
     Cdn = 1,
 }
