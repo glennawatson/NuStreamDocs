@@ -7,7 +7,7 @@ using NuStreamDocs.Common;
 namespace NuStreamDocs.Arithmatex.MathJax;
 
 /// <summary>Configuration for <see cref="MathJaxPlugin"/>.</summary>
-/// <param name="LoaderUrl">URL of the MathJax loader script. Default is the jsDelivr-hosted <c>tex-mml-chtml</c> bundle for MathJax 3.</param>
+/// <param name="LoaderUrl">URL of the MathJax loader script. Default is the jsDelivr-hosted <c>tex-mml-chtml</c> bundle for MathJax 3.2.2.</param>
 /// <param name="ProcessHtmlClass">
 /// Regex (matched as a whole-word selector) of HTML <c>class</c> values MathJax should typeset. Default
 /// <c>arithmatex</c> matches what <c>NuStreamDocs.Arithmatex</c> emits.
@@ -30,7 +30,7 @@ public readonly record struct MathJaxOptions(
 {
     /// <summary>Gets the option set with all defaults populated.</summary>
     public static MathJaxOptions Default { get; } = new(
-        "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js",
+        "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js",
         "arithmatex",
         ".*|");
 }
