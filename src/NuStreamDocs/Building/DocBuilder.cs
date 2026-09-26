@@ -62,6 +62,9 @@ public sealed class DocBuilder
     /// <summary>When true, pages whose frontmatter declares <c>draft: true</c> are still rendered; otherwise drafts are skipped.</summary>
     private bool _includeDrafts;
 
+    /// <summary>When true, every emitted script carries <c>data-cfasync="false"</c>.</summary>
+    private bool _rocketLoaderOptOut = true;
+
     /// <summary>UTF-8 site name surfaced through <see cref="BuildConfigureContext.SiteName"/>; empty when none configured.</summary>
     private byte[] _siteName = [];
 
@@ -76,6 +79,9 @@ public sealed class DocBuilder
 
     /// <summary>Gets a value indicating whether <c>draft: true</c> pages are emitted.</summary>
     public bool IncludeDraftsEnabled => _includeDrafts;
+
+    /// <summary>Gets a value indicating whether built pages opt their scripts out of Cloudflare Rocket Loader.</summary>
+    public bool RocketLoaderOptOutEnabled => _rocketLoaderOptOut;
 
     /// <summary>Gets the configured input docs root (defaults to <c>./docs</c>).</summary>
     public DirectoryPath InputRoot => _inputRoot;
@@ -114,6 +120,15 @@ public sealed class DocBuilder
     public DocBuilder IncludeDrafts(bool enabled)
     {
         _includeDrafts = enabled;
+        return this;
+    }
+
+    /// <summary>Sets whether built pages opt their scripts out of Cloudflare Rocket Loader (on by default).</summary>
+    /// <param name="enabled">True to add <c>data-cfasync="false"</c> to every script; false to leave scripts as emitted.</param>
+    /// <returns>This builder for chaining.</returns>
+    public DocBuilder UseRocketLoaderOptOut(bool enabled)
+    {
+        _rocketLoaderOptOut = enabled;
         return this;
     }
 
@@ -284,7 +299,7 @@ public sealed class DocBuilder
         BuildPipeline.RunAsync(
             _inputRoot,
             _outputRoot,
-            [.. _plugins],
+            BuildPluginArray(),
             new(BuildPathFilter(), _logger, _useDirectoryUrls, _includeDrafts, _siteName, _siteUrl, _siteAuthor),
             cancellationToken);
 
@@ -444,6 +459,11 @@ public sealed class DocBuilder
         _includes is [] && _excludes is []
             ? PathFilter.Empty
             : new([.. _includes], [.. _excludes]);
+
+    /// <summary>Builds the plugin set for a build run, including the built-in plugins enabled on this builder.</summary>
+    /// <returns>The registered plugins followed by the enabled built-ins.</returns>
+    internal IPlugin[] BuildPluginArray() =>
+        _rocketLoaderOptOut ? [.. _plugins, new RocketLoaderOptOutPlugin()] : [.. _plugins];
 
     /// <summary>External adapter mirroring <c>BuildPipeline.ApplyPostRenders</c> for the standalone <see cref="RenderPageAsync"/> path.</summary>
     /// <param name="input">Rental holding the rendered HTML.</param>
