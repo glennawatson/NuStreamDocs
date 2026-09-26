@@ -30,4 +30,11 @@ public readonly record struct FontFace(
     bool Preload,
     GenericFontFamily Fallback,
     GlobPattern[] LocalSrc,
-    byte[][] ThemeVariables);
+    byte[][] ThemeVariables)
+{
+    /// <summary>
+    /// Gets the UTF-8 package version to fetch (e.g. <c>5.2.8</c>); only used when <see cref="Provider"/> is
+    /// <see cref="FontProviderKind.Fontsource"/>. Empty fetches the latest release.
+    /// </summary>
+    public byte[] Version { get; init; } = [];
+}

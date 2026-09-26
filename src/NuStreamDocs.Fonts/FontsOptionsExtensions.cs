@@ -38,6 +38,30 @@ public static class FontsOptionsExtensions
             params int[] weights) =>
             AddFace(options, MakeFace(family.ToArray(), FontProviderKind.Fontsource, NormalizeWeights(weights), []));
 
+        /// <summary>
+        /// Adds a Fontsource family pinned to one package version (weight 400 unless given otherwise), default subsets,
+        /// <c>font-display: swap</c>, sans-serif fallback.
+        /// </summary>
+        /// <param name="family">UTF-8 CSS family name.</param>
+        /// <param name="version">UTF-8 <c>@fontsource</c> package version to fetch (e.g. <c>5.2.8</c>).</param>
+        /// <param name="weights">Numeric weights to fetch; empty fetches weight 400.</param>
+        /// <returns>The updated options.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="version"/> is empty.</exception>
+        public FontsOptions AddFontsourceFont(
+            ReadOnlySpan<byte> family,
+            ReadOnlySpan<byte> version,
+            params int[] weights)
+        {
+            if (version.IsEmpty)
+            {
+                throw new ArgumentException("Fontsource version must be non-empty.", nameof(version));
+            }
+
+            return AddFace(
+                options,
+                MakeFace(family.ToArray(), FontProviderKind.Fontsource, NormalizeWeights(weights), []) with { Version = version.ToArray() });
+        }
+
         /// <summary>Adds a family backed by local font files matched by <paramref name="src"/> (weight 400, <c>font-display: swap</c>, sans-serif fallback).</summary>
         /// <param name="family">UTF-8 CSS family name.</param>
         /// <param name="src">Glob patterns (relative to the input root) for the font files.</param>

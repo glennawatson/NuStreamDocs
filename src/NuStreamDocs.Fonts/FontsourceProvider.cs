@@ -13,6 +13,9 @@ public sealed class FontsourceProvider : IFontProvider
     /// <summary>Shared instance.</summary>
     public static readonly FontsourceProvider Instance = new();
 
+    /// <summary>Version tag used when a face doesn't pin one.</summary>
+    private const string LatestVersion = "latest";
+
     /// <summary>Default subset name used when none is requested.</summary>
     private static readonly byte[] LatinSubset = [.. "latin"u8];
 
@@ -36,6 +39,7 @@ public sealed class FontsourceProvider : IFontProvider
 
         var subsets = requestedSubsets is [_, ..] ? requestedSubsets : [LatinSubset];
         var id = FamilyId(face.FamilyBytes);
+        var version = face.Version is [_, ..] ? Encoding.UTF8.GetString(face.Version) : LatestVersion;
         List<FontResource> resources = [];
         for (var s = 0; s < subsets.Length; s++)
         {
@@ -44,7 +48,7 @@ public sealed class FontsourceProvider : IFontProvider
             {
                 for (var st = 0; st < face.Styles.Length; st++)
                 {
-                    var cssUrl = BuildStylesheetUrl(id, subset, face.Weights[w], face.Styles[st]);
+                    var cssUrl = BuildStylesheetUrl(id, version, subset, face.Weights[w], face.Styles[st]);
                     await AddFromStylesheetAsync(face, cssUrl, cache, resources, cancellationToken)
                         .ConfigureAwait(false);
                 }
@@ -56,14 +60,15 @@ public sealed class FontsourceProvider : IFontProvider
 
     /// <summary>Builds the jsDelivr stylesheet URL for one weight/style/subset of a Fontsource family.</summary>
     /// <param name="id">Fontsource package id (lowercase, hyphenated).</param>
+    /// <param name="version">Package version, or <c>latest</c>.</param>
     /// <param name="subset">Subset name.</param>
     /// <param name="weight">Numeric weight.</param>
     /// <param name="style">Upright or italic.</param>
     /// <returns>The stylesheet URL.</returns>
-    internal static ApiCompatString BuildStylesheetUrl(string id, string subset, int weight, FontStyle style)
+    internal static ApiCompatString BuildStylesheetUrl(string id, string version, string subset, int weight, FontStyle style)
     {
         var sb = new StringBuilder("https://cdn.jsdelivr.net/npm/@fontsource/");
-        _ = sb.Append(id).Append("@latest/").Append(subset).Append('-').Append(weight);
+        _ = sb.Append(id).Append('@').Append(version).Append('/').Append(subset).Append('-').Append(weight);
         if (style == FontStyle.Italic)
         {
             _ = sb.Append("-italic");
