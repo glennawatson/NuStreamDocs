@@ -14,9 +14,15 @@ public static class DocBuilderMermaidExtensions
     /// <param name="builder">Builder to configure.</param>
     extension(DocBuilder builder)
     {
-        /// <summary>Registers <see cref="MermaidPlugin"/>.</summary>
+        /// <summary>Registers <see cref="MermaidPlugin"/> with default options.</summary>
         /// <returns>The builder for chaining.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DocBuilder UseMermaid() => builder.UsePlugin(new MermaidPlugin());
+
+        /// <summary>Registers <see cref="MermaidPlugin"/> with the supplied options.</summary>
+        /// <param name="options">Plugin options.</param>
+        /// <returns>The builder for chaining.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseMermaid(MermaidOptions options) => builder.UsePlugin(new MermaidPlugin(options));
     }
 }

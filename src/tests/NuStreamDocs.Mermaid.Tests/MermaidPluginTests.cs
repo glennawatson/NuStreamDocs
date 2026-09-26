@@ -56,6 +56,35 @@ public class MermaidPluginTests
         await Assert.That(head).Contains("<script");
     }
 
+    /// <summary>The default head script opts out of Cloudflare Rocket Loader.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteHeadExtraOptsOutOfRocketLoaderByDefault()
+    {
+        ArrayBufferWriter<byte> sink = new(HeadOutputCapacity);
+        new MermaidPlugin().WriteHeadExtra(sink);
+        await Assert.That(Encoding.UTF8.GetString(sink.WrittenSpan))
+            .StartsWith("<script type=\"module\" data-cfasync=\"false\">");
+    }
+
+    /// <summary>Disabling the opt-out emits a plain module script.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteHeadExtraOmitsRocketLoaderOptOutWhenDisabled()
+    {
+        ArrayBufferWriter<byte> sink = new(HeadOutputCapacity);
+        new MermaidPlugin(new MermaidOptions(false)).WriteHeadExtra(sink);
+        var head = Encoding.UTF8.GetString(sink.WrittenSpan);
+        await Assert.That(head).StartsWith("<script type=\"module\">");
+        await Assert.That(head).DoesNotContain("data-cfasync");
+    }
+
+    /// <summary>UseMermaid with options registers the plugin.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task UseMermaidWithOptionsRegisters() =>
+        await Assert.That(new DocBuilder().UseMermaid(MermaidOptions.Default)).IsTypeOf<DocBuilder>();
+
     /// <summary>The custom fence handler emits a <c>pre.mermaid</c> wrapper.</summary>
     /// <returns>Async test.</returns>
     [Test]
