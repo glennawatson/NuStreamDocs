@@ -9,6 +9,9 @@ namespace NuStreamDocs.Theme.Material3.Tests;
 /// <summary>Coverage for Material3 EmbeddedAsset.ToResourceName.</summary>
 public class EmbeddedAssetCoverageTests
 {
+    /// <summary>Embedded path of the bundled stylesheet.</summary>
+    private const string StylesheetPath = "assets/stylesheets/material3.css";
+
     /// <summary>ToResourceName produces a non-empty resource path.</summary>
     /// <returns>Async test.</returns>
     [Test]
@@ -24,7 +27,7 @@ public class EmbeddedAssetCoverageTests
     [Test]
     public async Task BundledStylesheetCanBeRead()
     {
-        var bytes = EmbeddedAsset.ReadBytes("assets/stylesheets/material3.css");
+        var bytes = EmbeddedAsset.ReadBytes(StylesheetPath);
         await Assert.That(bytes.Length).IsGreaterThan(0);
     }
 
@@ -36,10 +39,24 @@ public class EmbeddedAssetCoverageTests
     [Test]
     public async Task BundledStylesheetIncludesClipboardRules()
     {
-        var css = Encoding.UTF8.GetString(EmbeddedAsset.ReadBytes("assets/stylesheets/material3.css"));
+        var css = Encoding.UTF8.GetString(EmbeddedAsset.ReadBytes(StylesheetPath));
         await Assert.That(css).Contains(".md-clipboard");
         await Assert.That(css).Contains("--md-clipboard-icon");
         await Assert.That(css).Contains(".md-clipboard--copied");
+    }
+
+    /// <summary>
+    /// The bundled stylesheet sizes mermaid diagrams as full-width figures in the text font; without these
+    /// rules the inline-icon sizing shrinks the diagram to 1.125em and the code font clips its labels.
+    /// </summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task BundledStylesheetIncludesMermaidRules()
+    {
+        var css = Encoding.UTF8.GetString(EmbeddedAsset.ReadBytes(StylesheetPath));
+        await Assert.That(css).Contains(".md-typeset pre.mermaid {\n    font-family: inherit;");
+        await Assert.That(css).Contains(".md-typeset .mermaid svg[viewBox] {");
+        await Assert.That(css).Contains("    width: 100%;\n    height: auto;");
     }
 
     /// <summary>

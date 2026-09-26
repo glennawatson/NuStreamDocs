@@ -41,10 +41,17 @@ public sealed class MermaidPlugin : IPagePostRenderPlugin, IHeadExtraProvider, I
     /// <summary>Gets the plain opening script tag.</summary>
     private static ReadOnlySpan<byte> ScriptOpen => "<script type=\"module\">\n"u8;
 
-    /// <summary>Gets the script body that loads the mermaid runtime and starts auto-discovery.</summary>
-    private static ReadOnlySpan<byte> ScriptBody => """
-           import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
-           mermaid.initialize({ startOnLoad: true });
+    /// <summary>Gets the import statement prefix preceding the runtime URL.</summary>
+    private static ReadOnlySpan<byte> ImportOpen => "import mermaid from \""u8;
+
+    /// <summary>
+    /// Gets the script tail that starts auto-discovery. Mermaid measures labels in the font it is configured with but
+    /// renders them in the page font, so it is configured with the page font.
+    /// </summary>
+    private static ReadOnlySpan<byte> ScriptTail => """
+           ";
+           const fontFamily = getComputedStyle(document.querySelector(".md-typeset") ?? document.body).fontFamily;
+           mermaid.initialize({ startOnLoad: true, fontFamily, themeVariables: { fontFamily } });
            </script>
            """u8;
 
@@ -65,7 +72,9 @@ public sealed class MermaidPlugin : IPagePostRenderPlugin, IHeadExtraProvider, I
     public void WriteHeadExtra(IBufferWriter<byte> writer)
     {
         writer.Write(_options.CloudflareRocketLoaderOptOut ? CloudflareOptOutScriptOpen : ScriptOpen);
-        writer.Write(ScriptBody);
+        writer.Write(ImportOpen);
+        writer.Write(_options.RuntimeUrl);
+        writer.Write(ScriptTail);
     }
 
     /// <inheritdoc/>

@@ -67,6 +67,32 @@ public class MermaidPluginTests
             .StartsWith("<script type=\"module\" data-cfasync=\"false\">");
     }
 
+    /// <summary>The default runtime is the pinned mermaid ES module, configured with the page font.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteHeadExtraImportsPinnedRuntimeWithPageFont()
+    {
+        ArrayBufferWriter<byte> sink = new(HeadOutputCapacity);
+        new MermaidPlugin().WriteHeadExtra(sink);
+        var head = Encoding.UTF8.GetString(sink.WrittenSpan);
+        await Assert.That(head).Contains("import mermaid from \"https://cdn.jsdelivr.net/npm/mermaid@12.0.0/dist/mermaid.esm.min.mjs\";\n");
+        await Assert.That(head).Contains("getComputedStyle(document.querySelector(\".md-typeset\") ?? document.body).fontFamily");
+        await Assert.That(head).Contains("mermaid.initialize({ startOnLoad: true, fontFamily, themeVariables: { fontFamily } });");
+        await Assert.That(head).EndsWith("</script>");
+    }
+
+    /// <summary>A configured runtime URL replaces the default pin.</summary>
+    /// <returns>Async test.</returns>
+    [Test]
+    public async Task WriteHeadExtraUsesConfiguredRuntimeUrl()
+    {
+        ArrayBufferWriter<byte> sink = new(HeadOutputCapacity);
+        new MermaidPlugin(MermaidOptions.Default with { RuntimeUrl = [.. "/assets/mermaid.mjs"u8] }).WriteHeadExtra(sink);
+        var head = Encoding.UTF8.GetString(sink.WrittenSpan);
+        await Assert.That(head).Contains("import mermaid from \"/assets/mermaid.mjs\";");
+        await Assert.That(head).DoesNotContain("cdn.jsdelivr.net");
+    }
+
     /// <summary>Disabling the opt-out emits a plain module script.</summary>
     /// <returns>Async test.</returns>
     [Test]

@@ -11,6 +11,13 @@ namespace NuStreamDocs.Mermaid;
 [System.Diagnostics.DebuggerDisplay("MermaidOptions: {ToString(),nq}")]
 public sealed record MermaidOptions(bool CloudflareRocketLoaderOptOut)
 {
-    /// <summary>Gets the default options: Cloudflare Rocket Loader opt-out enabled.</summary>
+    /// <summary>Gets the default mermaid ES module jsDelivr pin.</summary>
+    public static byte[] DefaultRuntimeUrl { get; } =
+        [.. "https://cdn.jsdelivr.net/npm/mermaid@12.0.0/dist/mermaid.esm.min.mjs"u8];
+
+    /// <summary>Gets the default options: Cloudflare Rocket Loader opt-out enabled, default runtime URL.</summary>
     public static MermaidOptions Default => new(true);
+
+    /// <summary>Gets the UTF-8 absolute URL of the mermaid ES module the page imports.</summary>
+    public byte[] RuntimeUrl { get; init; } = DefaultRuntimeUrl;
 }

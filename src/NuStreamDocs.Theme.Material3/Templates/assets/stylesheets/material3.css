@@ -1194,6 +1194,22 @@ a:hover {
     height: 1.125em;
 }
 
+/* Mermaid diagrams render inside a <pre>, which would otherwise hand the labels the
+   monospace code font; mermaid sizes its boxes for the text font, so labels overflow. */
+.md-typeset pre.mermaid {
+    font-family: inherit;
+    line-height: normal;
+}
+
+/* Mermaid diagrams are full-size figures, not icons: undo the icon sizing so the
+   diagram fills the block (mermaid caps it with an inline max-width). */
+.md-typeset .mermaid svg[viewBox] {
+    fill: initial;
+    vertical-align: baseline;
+    width: 100%;
+    height: auto;
+}
+
 .md-typeset svg.lg {
     width: 1.5em;
     height: 1.5em;
