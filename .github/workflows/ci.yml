@@ -1,43 +1,29 @@
 name: Build
-
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-
+    branches: [main]
 permissions:
   contents: read
-
 concurrency:
   group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 jobs:
   build:
     name: Build and test (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest, ubuntu-latest, macos-latest ]
-    runs-on: ${{ matrix.os }}
-    env:
-      DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE: 1
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
-
-      - name: Setup .NET Environment
-        uses: ./.github/actions/dotnet-environment
-
-      - name: Build
-        uses: ./.github/actions/dotnet-build
-        with:
-          solution-file: NuStreamDocs.slnx
-
-      - name: Test
-        uses: ./.github/actions/dotnet-test
-        with:
-          solution-file: NuStreamDocs.slnx
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    uses: glennawatson/actions-common/.github/workflows/workflow-common-setup-and-build.yml@main
+    with:
+      runner: ${{ matrix.os }}
+      solutionFile: NuStreamDocs.slnx
+      minverTagPrefix: 'v'
+      minverMinimumMajorMinor: '1.0'
+      minverAutoIncrement: 'minor'
+      dotnetVersions: |
+        8.0.x
+        10.0.x
+        11.0.100-rc.1.26425.128

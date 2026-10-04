@@ -1,21 +1,15 @@
 name: "CodeQL Advanced"
-
 on:
   push:
-    branches: [ main ]
-    paths-ignore: [ '.github/**' ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-    paths-ignore: [ '.github/**' ]
+    branches: [main]
   schedule:
-    - cron: '17 9 * * 2'
-
-permissions: { }
-
+  - cron: '17 9 * * 2'
+permissions: {}
 concurrency:
   group: codeql-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 jobs:
   analyze-csharp:
     name: Analyze C#
@@ -27,29 +21,31 @@ jobs:
       actions: read
     env:
       DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE: 1
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
-
-      - name: Setup .NET Environment
-        uses: ./.github/actions/dotnet-environment
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4
-        with:
-          languages: csharp
-          build-mode: manual
-          queries: security-extended
-
-      - name: Build
-        uses: ./.github/actions/dotnet-build
-        with:
-          solution-file: NuStreamDocs.slnx
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4
-        with:
-          category: "/language:csharp"
+    - name: Checkout repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+    - name: Setup .NET Environment
+      uses: glennawatson/actions-common/.github/actions/dotnet-environment@main
+      with:
+        dotnet-versions: |
+          8.0.x
+          10.0.x
+          11.0.100-rc.1.26425.128
+        minver-tag-prefix: 'v'
+        minver-auto-increment: 'minor'
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d
+      with:
+        languages: csharp
+        build-mode: manual
+        queries: security-extended
+    - name: Build
+      uses: glennawatson/actions-common/.github/actions/dotnet-build@main
+      with:
+        solution-file: NuStreamDocs.slnx
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d
+      with:
+        category: "/language:csharp"

@@ -1,98 +1,122 @@
 name: SonarCloud
-
 on:
-    push:
-        branches: [ main ]
-    pull_request:
-        branches: [ main ]
-
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 permissions:
-    contents: read
-
+  contents: read
 env:
-    DOTNET_NOLOGO: true
-    DOTNET_CLI_TELEMETRY_OPTOUT: true
-    DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 jobs:
-    analyze:
-        name: Build, test, and analyze
-        runs-on: ubuntu-latest
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        
-        steps:
-            -   name: Checkout
-                uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-                with:
-                    fetch-depth: 0
-
-            -   name: Set up JDK 17
-                uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6
-                with:
-                    java-version: '17'
-                    distribution: zulu
-
-            -   name: Setup .NET
-                uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
-                with:
-                    dotnet-version: |
-                        8.0.x
-                        10.0.x
-                        11.0.100-rc.1.26425.128
-
-            -   name: Cache SonarCloud packages
-                uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-                with:
-                    path: ~/.sonar/cache
-                    key: ${{ runner.os }}-sonar
-                    restore-keys: ${{ runner.os }}-sonar
-
-            -   name: Cache SonarScanner
-                id: cache-sonar-scanner
-                uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-                with:
-                    path: ${{ runner.temp }}/sonar-scanner
-                    key: ${{ runner.os }}-sonar-scanner
-                    restore-keys: ${{ runner.os }}-sonar-scanner
-
-            -   name: Install SonarScanner
-                if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
-                run: |
-                    mkdir -p "${{ runner.temp }}/sonar-scanner"
-                    dotnet tool update dotnet-sonarscanner --tool-path "${{ runner.temp }}/sonar-scanner"
-
-            -   name: Restore
-                working-directory: src
-                run: dotnet restore NuStreamDocs.slnx
-
-            -   name: Begin Sonar analysis
-                working-directory: src
-                env:
-                    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-                run: |
-                    "${{ runner.temp }}/sonar-scanner/dotnet-sonarscanner" begin \
-                      /k:"glennawatson_NuStreamDocs" \
-                      /o:"glennawatson" \
-                      /d:sonar.token="${SONAR_TOKEN}" \
-                      /d:sonar.host.url="https://sonarcloud.io" \
-                      /d:sonar.cs.vscoveragexml.reportsPaths="**/TestResults/**/*.xml" \
-                      /d:sonar.exclusions="**/tests/**,**/benchmarks/**,**/tools/**" \
-                      /d:sonar.coverage.exclusions="**/tests/**,**/benchmarks/**,**/tools/**" \
-                      /d:sonar.cpd.exclusions="**/tests/**,**/benchmarks/**,**/tools/**" \
-                      /d:sonar.test.exclusions="**/tests/**,**/benchmarks/**,**/tools/**"
-
-            -   name: Build
-                working-directory: src
-                run: dotnet build NuStreamDocs.slnx --no-restore --configuration Release
-
-            -   name: Test with MTP coverage
-                working-directory: src
-                run: dotnet test --solution NuStreamDocs.slnx --configuration Release --no-restore -- --coverage --coverage-output-format xml
-
-            -   name: End Sonar analysis
-                working-directory: src
-                env:
-                    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-                run: |
-                    "${{ runner.temp }}/sonar-scanner/dotnet-sonarscanner" end \
-                      /d:sonar.token="${SONAR_TOKEN}"
+  analyze:
+    name: Build, test, and analyze
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+    - name: Set up JDK 17
+      uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+      with:
+        java-version: '17'
+        distribution: zulu
+    - name: Setup .NET
+      uses: glennawatson/actions-common/.github/actions/setup-sdk@main
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+          11.0.100-rc.1.26425.128
+    - name: Cache SonarCloud packages
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+    - name: Cache SonarScanner
+      id: cache-sonar-scanner
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: ${{ runner.temp }}/sonar-scanner
+        key: ${{ runner.os }}-sonar-scanner
+        restore-keys: ${{ runner.os }}-sonar-scanner
+    - name: Install SonarScanner
+      if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+      uses: glennawatson/actions-common/.github/actions/run-command@main
+      with:
+        command: dotnet
+        arguments: |-
+          tool
+          update
+          dotnet-sonarscanner
+          --tool-path
+          ${{ runner.temp }}/sonar-scanner
+        working-directory: .
+    - name: Restore
+      uses: glennawatson/actions-common/.github/actions/run-command@main
+      with:
+        command: dotnet
+        arguments: |-
+          restore
+          NuStreamDocs.slnx
+        working-directory: src
+    - name: Begin Sonar analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      uses: glennawatson/actions-common/.github/actions/run-command@main
+      with:
+        command: ${{ runner.temp }}/sonar-scanner/dotnet-sonarscanner
+        arguments: |-
+          begin
+          /k:glennawatson_NuStreamDocs
+          /o:glennawatson
+          /d:sonar.token=${SONAR_TOKEN}
+          /d:sonar.host.url=https://sonarcloud.io
+          /d:sonar.cs.vscoveragexml.reportsPaths=**/TestResults/**/*.xml
+          /d:sonar.exclusions=**/tests/**,**/benchmarks/**,**/tools/**
+          /d:sonar.coverage.exclusions=**/tests/**,**/benchmarks/**,**/tools/**
+          /d:sonar.cpd.exclusions=**/tests/**,**/benchmarks/**,**/tools/**
+          /d:sonar.test.exclusions=**/tests/**,**/benchmarks/**,**/tools/**
+        working-directory: src
+    - name: Build
+      uses: glennawatson/actions-common/.github/actions/run-command@main
+      with:
+        command: dotnet
+        arguments: |-
+          build
+          NuStreamDocs.slnx
+          --no-restore
+          --configuration
+          Release
+        working-directory: src
+    - name: Test with MTP coverage
+      uses: glennawatson/actions-common/.github/actions/run-command@main
+      with:
+        command: dotnet
+        arguments: |-
+          test
+          --solution
+          NuStreamDocs.slnx
+          --configuration
+          Release
+          --no-restore
+          --
+          --coverage
+          --coverage-output-format
+          xml
+        working-directory: src
+    - name: End Sonar analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      uses: glennawatson/actions-common/.github/actions/run-command@main
+      with:
+        command: ${{ runner.temp }}/sonar-scanner/dotnet-sonarscanner
+        arguments: |-
+          end
+          /d:sonar.token=${SONAR_TOKEN}
+        working-directory: src
