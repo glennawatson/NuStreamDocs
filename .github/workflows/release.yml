@@ -173,7 +173,7 @@ jobs:
         run: dotnet pack NuStreamDocs.slnx --no-build --configuration Release -o "${GITHUB_WORKSPACE}/packages"
 
       - name: Upload unsigned packages
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: unsigned-nuget
           path: packages/*.nupkg
@@ -189,7 +189,7 @@ jobs:
       packages: read
     # SimplySign has no headless API; certum-sign drives its GUI under Xvfb, which needs Linux.
     container:
-      image: ghcr.io/reactiveui/certum-signer:latest@sha256:05d52b46c5e62769146f37aae308127ec1d74cfb1209261e35334eaac700dcac
+      image: ghcr.io/reactiveui/certum-signer:latest@sha256:2c03eb55111b6194f1fa482a1ccaeadeb4bc814ddc9235d55dbcd730802fcd7a
     # Composite actions cannot declare secret inputs, so certum-sign reads these from env.
     env:
       CERTUM_USER_ID: ${{ secrets.CERTUM_USER_ID }}
@@ -202,7 +202,7 @@ jobs:
           sparse-checkout: .github/actions
 
       - name: Download unsigned packages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: unsigned-nuget
           path: signed
@@ -213,7 +213,7 @@ jobs:
           packages-glob: 'signed/*.nupkg'
 
       - name: Upload signed packages
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: signed-nuget
           path: signed/*.nupkg
@@ -234,7 +234,7 @@ jobs:
           dotnet-version: 11.0.100-rc.1.26425.128
 
       - name: Download signed packages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: signed-nuget
           path: signed
@@ -284,7 +284,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download signed packages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: signed-nuget
           path: signed
