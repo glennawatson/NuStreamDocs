@@ -73,7 +73,7 @@
 
   <ItemGroup>
     <PackageVersion Include="System.CommandLine" Version="2.0.12"/>
-    <PackageVersion Include="Polly" Version="8.8.0"/>
-    <PackageVersion Include="Polly.RateLimiting" Version="8.8.0"/>
+    <PackageVersion Include="Polly" Version="8.9.0"/>
+    <PackageVersion Include="Polly.RateLimiting" Version="8.9.0"/>
   </ItemGroup>
 </Project>
