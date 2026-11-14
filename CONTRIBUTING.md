@@ -354,7 +354,7 @@ Test projects relax the allocation rules but keep the style rules.
 ### Analyzers and suppressions
 
 - **Fix the code, don't silence the rule.** The analyzer set
-  (StyleCop, Roslynator, SonarAnalyzer, .NET CA, Blazor.Common)
+  (StyleSharp, PerformanceSharp, SecuritySharp and .NET CA)
   catches real perf and correctness issues; suppressing is the last
   resort.
 - When suppression is genuinely correct, attach a per-symbol

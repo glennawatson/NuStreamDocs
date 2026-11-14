@@ -76,7 +76,7 @@ public static class Program
 
         if (HasFlag(args, "--help") || HasFlag(args, "-h"))
         {
-            PrintUsage();
+            PrintUsage(Console.Out);
             return 0;
         }
 
@@ -329,8 +329,9 @@ public static class Program
         return false;
     }
 
-    /// <summary>Prints CLI usage to stdout.</summary>
-    private static void PrintUsage()
+    /// <summary>Writes CLI usage to the requested output.</summary>
+    /// <param name="output">Destination for the help text.</param>
+    private static void PrintUsage(TextWriter output)
     {
         var help = new StringBuilder()
             .AppendLine("NuStreamDocs.Search.Pagefind.Refresh")
@@ -349,7 +350,7 @@ public static class Program
             .AppendLine("    [--no-verify]                  Skip SHA-256 verification.")
             .AppendLine("    [--help] [-h]                  Print this message.")
             .ToString();
-        Console.Out.Write(help);
+        output.Write(help);
     }
 
     /// <summary>One row of the RID translation table.</summary>

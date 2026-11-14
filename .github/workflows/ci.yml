@@ -24,6 +24,5 @@ jobs:
       minverMinimumMajorMinor: '1.0'
       minverAutoIncrement: 'minor'
       dotnetVersions: |
-        8.0.x
         10.0.x
-        11.0.100-rc.1.26425.128
+        11.0.x

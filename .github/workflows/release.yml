@@ -48,9 +48,8 @@ jobs:
       uses: glennawatson/actions-common/.github/actions/dotnet-environment@main
       with:
         dotnet-versions: |
-          8.0.x
           10.0.x
-          11.0.100-rc.1.26425.128
+          11.0.x
         minver-tag-prefix: 'v'
         minver-auto-increment: 'minor'
         stamp-version: 'false'
@@ -157,7 +156,7 @@ jobs:
     - name: Setup .NET
       uses: glennawatson/actions-common/.github/actions/setup-sdk@main
       with:
-        dotnet-version: 11.0.100-rc.1.26425.128
+        dotnet-version: 11.0.x
     - name: Download signed packages
       uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
       with:
@@ -193,9 +192,8 @@ jobs:
       uses: glennawatson/actions-common/.github/actions/dotnet-environment@main
       with:
         dotnet-versions: |
-          8.0.x
           10.0.x
-          11.0.100-rc.1.26425.128
+          11.0.x
         minver-tag-prefix: 'v'
         minver-auto-increment: 'minor'
         stamp-version: 'false'

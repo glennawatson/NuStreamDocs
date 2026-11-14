@@ -193,7 +193,7 @@ that shape.
 ## Code Style
 
 - `.editorconfig` at the repo root drives formatting + IDExxxx severities.
-- StyleCop, Roslynator, and Blazor.Common analyzers are active in every project (configured in
+- StyleSharp, PerformanceSharp and SecuritySharp analyzers are active in every project (configured in
   `src/Directory.Build.props`).
 - `EnforceCodeStyleInBuild=true` so editorconfig severities for IDExxxx rules fire at compile time.
 - File header copyright text comes from `stylecop.json`'s `companyName`; SA1636 enforces every `.cs` file matches.
@@ -330,7 +330,7 @@ tests because they're style-not-perf.
 - **Pre-size `StringBuilder` / `Dictionary` / `HashSet`** with a capacity hint that reflects the expected size. The
   integration tests catch cases where this matters.
 - **Avoid `ImmutableArray<T>` / `ImmutableList<T>` on hot paths.** The wrapping struct adds an indirection on every
-  read, the builder churns intermediate arrays, and Sonar/Roslynator hits don't outweigh a plain `T[]` exposed via a
+  read, the builder churns intermediate arrays, and analyzer suggestions don't outweigh a plain `T[]` exposed via a
   property the renderer treats as immutable by convention. Reach for an immutable collection only when the API is
   genuinely public and consumers must not mutate. Hide construction behind an `internal static` helper (e.g.
   `NavBuilder.ToArray`) so the pooling/sizing detail isn't duplicated at every call site.
@@ -450,7 +450,7 @@ tests because they're style-not-perf.
 ### Suppressions
 
 - **Fix the code, don't silence the rule.** Refactor the call site rather than reaching for an attribute. The analyzer
-  set in this repo (StyleCop, Roslynator, SonarAnalyzer, .NET CA, Blazor.Common) catches real perf and correctness
+  set in this repo (StyleSharp, PerformanceSharp, SecuritySharp and .NET CA) catches real perf and correctness
   issues; suppressing is the last resort.
 - **When suppression is genuinely correct, use `[SuppressMessage]` with a `Justification`.** Per-symbol attribute on the
   smallest enclosing member: `[SuppressMessage("Category", "RuleId", Justification = "Why this case is intentional.")]`.

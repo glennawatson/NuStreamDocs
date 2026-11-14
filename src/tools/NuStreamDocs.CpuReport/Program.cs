@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Diagnostics.Tracing.Etlx;
+using Microsoft.Extensions.Logging;
 
 namespace NuStreamDocs.CpuReport;
 
@@ -21,7 +22,7 @@ namespace NuStreamDocs.CpuReport;
 /// sampling fires roughly once per millisecond per running managed thread, so absolute counts
 /// are noisy on a single trace; the *relative* ranking between methods is what carries signal.
 /// </remarks>
-internal static class Program
+internal static partial class Program
 {
     /// <summary>Default number of rows to surface in each table.</summary>
     private const int DefaultTopN = 25;
@@ -58,16 +59,19 @@ internal static class Program
     /// <returns>0 on success; non-zero on usage / file / sampling error.</returns>
     private static int Main(string[] args)
     {
+        using var loggerFactory = LoggerFactory.Create(static builder =>
+            builder.AddConsole(static options => options.LogToStandardErrorThreshold = LogLevel.Trace));
+        var logger = loggerFactory.CreateLogger("NuStreamDocs.CpuReport");
         if (args.Length is 0)
         {
-            Console.Error.WriteLine("usage: smkd-cpureport <path-to-trace.nettrace> [topN]");
+            LogUsage(logger);
             return ExitCodeUsageError;
         }
 
         var tracePath = args[0];
         if (!File.Exists(tracePath))
         {
-            Console.Error.WriteLine($"trace file not found: {tracePath}");
+            LogTraceFileNotFound(logger, tracePath);
             return ExitCodeTraceFileNotFound;
         }
 
@@ -80,9 +84,7 @@ internal static class Program
         var stats = AggregateSamples(tracePath);
         if (stats.TotalSamples is 0)
         {
-            Console.Error.WriteLine(
-                "trace contained no CPU sample events. Make sure the benchmark was instrumented with "
-                + "[EventPipeProfiler(EventPipeProfile.CpuSampling)].");
+            LogNoCpuSamples(logger);
             return ExitCodeNoCpuSamples;
         }
 
@@ -91,6 +93,23 @@ internal static class Program
         WriteStackTable(stats, topN, Console.Out);
         return 0;
     }
+
+    /// <summary>Reports the required command-line arguments.</summary>
+    /// <param name="logger">Diagnostic destination.</param>
+    [LoggerMessage(EventId = 1, Level = LogLevel.Error, Message = "usage: smkd-cpureport <path-to-trace.nettrace> [topN]")]
+    private static partial void LogUsage(ILogger logger);
+
+    /// <summary>Reports a missing trace input.</summary>
+    /// <param name="logger">Diagnostic destination.</param>
+    /// <param name="tracePath">Requested trace path.</param>
+    [LoggerMessage(EventId = 2, Level = LogLevel.Error, Message = "trace file not found: {TracePath}")]
+    private static partial void LogTraceFileNotFound(ILogger logger, string tracePath);
+
+    /// <summary>Reports a trace without CPU samples.</summary>
+    /// <param name="logger">Diagnostic destination.</param>
+    [LoggerMessage(EventId = 3, Level = LogLevel.Error,
+        Message = "trace contained no CPU sample events. Make sure the benchmark was instrumented with [EventPipeProfiler(EventPipeProfile.CpuSampling)].")]
+    private static partial void LogNoCpuSamples(ILogger logger);
 
     /// <summary>Walks the trace file and aggregates self-time and inclusive-time per managed method, plus self-time per call stack.</summary>
     /// <param name="tracePath">Absolute path to the <c>.nettrace</c> file.</param>
