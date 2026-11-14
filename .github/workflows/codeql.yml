@@ -27,7 +27,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Setup .NET Environment
-      uses: glennawatson/actions-common/.github/actions/dotnet-environment@main
+      uses: glennawatson/actions-common/.github/actions/dotnet-environment@d1a1652f1d0e4ad7d2f77bda30b58f4b42ab0748 # main
       with:
         dotnet-versions: |
           10.0.x
@@ -41,7 +41,7 @@ jobs:
         build-mode: manual
         queries: security-extended
     - name: Build
-      uses: glennawatson/actions-common/.github/actions/dotnet-build@main
+      uses: glennawatson/actions-common/.github/actions/dotnet-build@d1a1652f1d0e4ad7d2f77bda30b58f4b42ab0748 # main
       with:
         solution-file: NuStreamDocs.slnx
     - name: Perform CodeQL Analysis
