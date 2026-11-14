@@ -37,7 +37,7 @@ jobs:
       semver2: ${{ steps.minver.outputs.SemVer2 }}
       tag: ${{ steps.tagname.outputs.tag }}
       prerelease: ${{ steps.tagname.outputs.prerelease }}
-      sourceSha: ${{ steps.sourcesha.outputs.sha }}
+      sourceSha: ${{ steps.tagname.outputs.sha }}
     steps:
     - name: Checkout
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -45,31 +45,22 @@ jobs:
         ref: ${{ inputs.sourceRef }}
         fetch-depth: 0
     - name: Setup .NET Environment
-      uses: glennawatson/actions-common/.github/actions/dotnet-environment@main
+      uses: glennawatson/actions-common/.github/actions/dotnet-environment@381282a6137c4f3c099ff80d9ee909e5d262998a
       with:
-        dotnet-versions: |
-          10.0.x
-          11.0.x
+        dotnet-versions: 11.0.x
         minver-tag-prefix: 'v'
         minver-auto-increment: 'minor'
         stamp-version: 'false'
-    - name: Resolve built commit SHA
-      id: sourcesha
-      uses: glennawatson/actions-common/.github/actions/run-csharp@main
-      with:
-        shared-script: resolve-built-commit-sha-c775df1621.cs
     - name: Validate version inputs
-      env:
-        BUMP: ${{ inputs.bump }}
-        PRE_RELEASE: ${{ inputs.preRelease }}
-        VERSION_OVERRIDE: ${{ inputs.versionOverride }}
-      uses: glennawatson/actions-common/.github/actions/run-csharp@main
+      uses: glennawatson/actions-common/.github/actions/release-inputs-validate@381282a6137c4f3c099ff80d9ee909e5d262998a
       with:
-        shared-script: validate-version-inputs-2aad3ac3e2.cs
+        bump: ${{ inputs.bump != '(pick one)' && inputs.bump || '' }}
+        pre-release: ${{ inputs.preRelease }}
+        version-override: ${{ inputs.versionOverride }}
     - name: Compute version and tag
       if: inputs.bump != '(pick one)' && inputs.versionOverride == ''
       id: bump
-      uses: glennawatson/actions-common/.github/actions/compute-version-and-tag@main
+      uses: glennawatson/actions-common/.github/actions/compute-version-and-tag@381282a6137c4f3c099ff80d9ee909e5d262998a
       with:
         bump: ${{ inputs.bump }}
         tag-prefix: 'v'
@@ -77,37 +68,27 @@ jobs:
         push-tag: 'false'
     - name: Resolve release tag
       id: tagname
-      env:
-        BUMP_TAG: ${{ steps.bump.outputs.tag }}
-        BUMP_PRERELEASE: ${{ steps.bump.outputs.prerelease }}
-        VERSION_OVERRIDE: ${{ inputs.versionOverride }}
-      uses: glennawatson/actions-common/.github/actions/run-csharp@main
+      uses: glennawatson/actions-common/.github/actions/release-tag-resolve@381282a6137c4f3c099ff80d9ee909e5d262998a
       with:
-        shared-script: resolve-release-tag-4b14309272.cs
+        bump-tag: ${{ steps.bump.outputs.tag }}
+        bump-prerelease: ${{ steps.bump.outputs.prerelease }}
+        version-override: ${{ inputs.versionOverride }}
+        tag-prefix: v
     - name: Stamp version with MinVer
       id: minver
-      uses: glennawatson/actions-common/.github/actions/minver@main
+      uses: glennawatson/actions-common/.github/actions/minver@381282a6137c4f3c099ff80d9ee909e5d262998a
       with:
         tag-prefix: 'v'
         auto-increment: 'minor'
         version-override: ${{ inputs.versionOverride != '' && inputs.versionOverride || steps.bump.outputs.version }}
     - name: Build
-      uses: glennawatson/actions-common/.github/actions/dotnet-build@main
+      uses: glennawatson/actions-common/.github/actions/dotnet-build@381282a6137c4f3c099ff80d9ee909e5d262998a
       with:
         solution-file: NuStreamDocs.slnx
     - name: Pack NuGet packages
-      uses: glennawatson/actions-common/.github/actions/run-command@main
-      with:
-        command: dotnet
-        arguments: |-
-          pack
-          NuStreamDocs.slnx
-          --no-build
-          --configuration
-          Release
-          -o
-          ${GITHUB_WORKSPACE}/packages
-        working-directory: src
+      shell: bash
+      run: dotnet "pack" "NuStreamDocs.slnx" "--no-build" "--configuration" "Release" "-o" "${GITHUB_WORKSPACE}/packages"
+      working-directory: src
     - name: Upload unsigned packages
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
@@ -122,20 +103,23 @@ jobs:
     permissions:
       contents: read
       packages: read
-    container:
-      image: ghcr.io/reactiveui/certum-signer:latest@sha256:ee5d4af12d51a9bd75e7008df78880cb7d352a841573647674f70cb587809554
     env:
       CERTUM_USER_ID: ${{ secrets.CERTUM_USER_ID }}
       CERTUM_OTP_URI: ${{ secrets.CERTUM_OTP_URI }}
       CERTUM_CERT_FINGERPRINT: ${{ secrets.CERTUM_CERT_FINGERPRINT }}
     steps:
+    - name: Setup .NET Environment
+      uses: glennawatson/actions-common/.github/actions/dotnet-environment@381282a6137c4f3c099ff80d9ee909e5d262998a
+      with:
+        stamp-version: false
+        dotnet-versions: 11.0.x
     - name: Download unsigned packages
       uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
       with:
         name: unsigned-nuget
         path: signed
     - name: Sign packages with Certum SimplySign
-      uses: glennawatson/actions-common/.github/actions/certum-sign@main
+      uses: glennawatson/actions-common/.github/actions/certum-sign@381282a6137c4f3c099ff80d9ee909e5d262998a
       with:
         packages-glob: 'signed/*.nupkg'
     - name: Upload signed packages
@@ -154,9 +138,10 @@ jobs:
       id-token: write
     steps:
     - name: Setup .NET
-      uses: glennawatson/actions-common/.github/actions/setup-sdk@main
+      uses: glennawatson/actions-common/.github/actions/dotnet-environment@381282a6137c4f3c099ff80d9ee909e5d262998a
       with:
-        dotnet-version: 11.0.x
+        stamp-version: false
+        dotnet-versions: 11.0.x
     - name: Download signed packages
       uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
       with:
@@ -170,64 +155,18 @@ jobs:
     - name: Push to NuGet
       env:
         NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
-      uses: glennawatson/actions-common/.github/actions/run-csharp@main
-      with:
-        shared-script: push-to-nuget-d58e357f8c.cs
+      shell: bash
+      run: dotnet nuget push "signed/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
   create-release:
-    needs: [build, publish-nuget]
-    runs-on: ubuntu-latest
+    needs:
+    - build
+    - publish-nuget
     permissions:
       contents: write
-    steps:
-    - name: Checkout
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      with:
-        fetch-depth: 0
-    - name: Download signed packages
-      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
-      with:
-        name: signed-nuget
-        path: signed
-    - name: Setup .NET Environment
-      uses: glennawatson/actions-common/.github/actions/dotnet-environment@main
-      with:
-        dotnet-versions: |
-          10.0.x
-          11.0.x
-        minver-tag-prefix: 'v'
-        minver-auto-increment: 'minor'
-        stamp-version: 'false'
-    - name: Install GitReleaseNoteGenerator
-      uses: glennawatson/actions-common/.github/actions/run-command@main
-      with:
-        command: dotnet
-        arguments: |-
-          tool
-          install
-          -g
-          GitReleaseNoteGenerator
-        working-directory: .
-    - name: Generate release notes
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-        RELEASE_VERSION: ${{ needs.build.outputs.semver2 }}
-      uses: glennawatson/actions-common/.github/actions/run-command@main
-      with:
-        command: git-release-notes
-        arguments: |-
-          --release-version
-          $RELEASE_VERSION
-          --output-file
-          release-notes.md
-        working-directory: .
-    - name: Create GitHub Release
-      env:
-        GH_TOKEN: ${{ github.token }}
-        REPO: ${{ github.repository }}
-        TAG: ${{ needs.build.outputs.tag }}
-        TARGET: ${{ needs.build.outputs.sourceSha }}
-        TITLE: ${{ needs.build.outputs.semver2 }}
-        PRERELEASE: ${{ needs.build.outputs.prerelease }}
-      uses: glennawatson/actions-common/.github/actions/run-csharp@main
-      with:
-        shared-script: create-github-release-54073718a8.cs
+    uses: glennawatson/actions-common/.github/workflows/workflow-common-create-release.yml@381282a6137c4f3c099ff80d9ee909e5d262998a
+    with:
+      version: ${{ needs.build.outputs.semver2 }}
+      tag: ${{ needs.build.outputs.tag }}
+      target: ${{ needs.build.outputs.sourceSha }}
+      prerelease: ${{ needs.build.outputs.prerelease == 'true' }}
+...
