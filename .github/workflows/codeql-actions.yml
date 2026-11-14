@@ -19,4 +19,7 @@ jobs:
       security-events: write
       contents: read
       actions: read
-    uses: glennawatson/actions-common/.github/workflows/workflow-common-codeql-actions.yml@main
+      packages: read
+    uses: glennawatson/actions-common/.github/workflows/workflow-common-codeql.yml@main
+    with:
+      analyzeCSharp: false

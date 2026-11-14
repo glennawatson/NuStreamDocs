@@ -6,19 +6,15 @@ on:
     branches: [main]
 permissions:
   contents: read
+  actions: write
 concurrency:
   group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   build:
-    name: Build and test (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+    name: Build and test
     uses: glennawatson/actions-common/.github/workflows/workflow-common-setup-and-build.yml@main
     with:
-      runner: ${{ matrix.os }}
       solutionFile: NuStreamDocs.slnx
       minverTagPrefix: 'v'
       minverMinimumMajorMinor: '1.0'
