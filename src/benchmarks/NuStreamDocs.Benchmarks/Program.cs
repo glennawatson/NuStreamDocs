@@ -22,7 +22,15 @@ public static class Program
     public static void Main(string[] args)
     {
 #if NET11_0_OR_GREATER
-        if (Array.Exists(args, static argument => argument is "-i" or "--inProcess" or "--cli" or "--coreRun"))
+        if (Array.Exists(args, static argument => argument is "-i" or "--inProcess"))
+        {
+            var inProcessConfig = ManualConfig.Create(DefaultConfig.Instance)
+                .AddJob(Job.Default.WithToolchain(BenchmarkDotNet.Toolchains.InProcess.Emit.InProcessEmitToolchain.Instance).AsMutator());
+            _ = BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, inProcessConfig);
+            return;
+        }
+
+        if (Array.Exists(args, static argument => argument is "--cli" or "--coreRun"))
         {
             _ = BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
             return;

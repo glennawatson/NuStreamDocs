@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RoslynCommonAnalyzersVersion>5.1.4</RoslynCommonAnalyzersVersion>
-    <SourceDocParserVersion>2.7.0</SourceDocParserVersion>
+    <RoslynCommonAnalyzersVersion>5.2.0</RoslynCommonAnalyzersVersion>
+    <SourceDocParserVersion>2.8.0</SourceDocParserVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,10 +38,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageVersion Include="TUnit" Version="1.84.0" />
+    <PackageVersion Include="TUnit" Version="1.87.12" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="4.0.0" />
+    <PackageVersion Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="4.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,7 +63,7 @@
         <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="11.0.0" />
         <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="11.0.0" />
         <PackageVersion Include="System.IO.Hashing" Version="11.0.0" />
-        <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="11.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="11.0.1" />
       </ItemGroup>
     </When>
     <Otherwise>
@@ -78,7 +78,7 @@
         <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.15" />
         <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.15" />
         <PackageVersion Include="System.IO.Hashing" Version="10.0.15" />
-        <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
+        <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.1" />
       </ItemGroup>
     </Otherwise>
   </Choose>
