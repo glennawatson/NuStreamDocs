@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\NuStreamDocs.Emoji\NuStreamDocs.Emoji.csproj"/>
     <ProjectReference Include="..\..\NuStreamDocs.Nav\NuStreamDocs.Nav.csproj"/>
     <ProjectReference Include="..\..\NuStreamDocs.Toc\NuStreamDocs.Toc.csproj"/>
+    <ProjectReference Include="..\..\NuStreamDocs.Videos\NuStreamDocs.Videos.csproj"/>
   </ItemGroup>
 
 </Project>

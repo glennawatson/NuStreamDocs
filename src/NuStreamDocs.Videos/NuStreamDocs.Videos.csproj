@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <PackageId>NuStreamDocs.Videos</PackageId>
+    <Description>Byte-first responsive video auto-embedding for NuStreamDocs markdown across YouTube, Vimeo, OneDrive, SharePoint/Microsoft Stream, Azure Video Indexer and Blob/CDN video, Loom, Dailymotion, Twitch, Wistia, Cloudflare Stream, Google Drive, Bilibili, Vidyard, and direct HTML5 video URLs.</Description>
+    <RootNamespace>NuStreamDocs.Videos</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+    <ProjectReference Include="..\NuStreamDocs.Markdown.Common\NuStreamDocs.Markdown.Common.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Videos.Tests"/>
+    <InternalsVisibleTo Include="NuStreamDocs.Benchmarks"/>
+  </ItemGroup>
+
+</Project>

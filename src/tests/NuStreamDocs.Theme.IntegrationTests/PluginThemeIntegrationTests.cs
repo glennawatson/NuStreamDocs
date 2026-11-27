@@ -10,6 +10,7 @@ using NuStreamDocs.Nav;
 using NuStreamDocs.Theme.Material;
 using NuStreamDocs.Theme.Material3;
 using NuStreamDocs.Toc;
+using NuStreamDocs.Videos;
 
 namespace NuStreamDocs.Theme.IntegrationTests;
 
@@ -232,6 +233,30 @@ public class PluginThemeIntegrationTests
         var html = await BuildPageAsync(theme, Source, static b => b.UseToc());
         await Assert.That(CountOccurrences(html, "class=\"md-nav md-nav--secondary\"")).IsEqualTo(1);
         await Assert.That(html).Contains("aria-label=\"On this page\"");
+    }
+
+    /// <summary>Video embeds emit the responsive container, provider iframe, and head stylesheet link across both themes.</summary>
+    /// <param name="theme">Theme variant under test.</param>
+    /// <returns>Async test.</returns>
+    [Test]
+    [Arguments(ThemeKind.Material)]
+    [Arguments(ThemeKind.Material3)]
+    public async Task VideosPluginRendersResponsiveIframeAndStylesheet(ThemeKind theme)
+    {
+        const string Source = """
+                              # Demo Videos
+
+                              https://vimeo.com/76979871
+
+                              ![Azure Overview](https://www.videoindexer.ai/accounts/00000000-0000-0000-0000-000000000000/videos/a1b2c3d4e5)
+                              """;
+
+        var html = await BuildPageAsync(theme, Source, static b => b.UseVideos());
+        await Assert.That(html).Contains("assets/extensions/video.css");
+        await Assert.That(html).Contains("class=\"nd-video nd-video--vimeo\"");
+        await Assert.That(html).Contains("https://player.vimeo.com/video/76979871?dnt=1");
+        await Assert.That(html).Contains("https://www.videoindexer.ai/embed/player/00000000-0000-0000-0000-000000000000/a1b2c3d4e5/");
+        await Assert.That(html).Contains("title=\"Azure Overview\"");
     }
 
     /// <summary>Builds a single-page site through the chosen theme and returns the rendered HTML for <c>index.md</c>.</summary>

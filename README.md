@@ -303,6 +303,7 @@ Each is a separate assembly so you only pull what you use:
 |---------------------------------------------|-----------------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`NuStreamDocs.Mermaid`][Mer]               | [![ver][MerV]][Mer]   | `.UseMermaid()`         | Retag fenced `mermaid` blocks for the Mermaid runtime.                                                                                                                                                                                                                                                                                                                                                                                   |
 | [`NuStreamDocs.Lightbox`][LB]               | [![ver][LBV]][LB]     | `.UseLightbox()`        | glightbox: wraps content images in lightbox triggers, ships glightbox CSS/JS.                                                                                                                                                                                                                                                                                                                                                            |
+| [`NuStreamDocs.Videos`][Vid]                | [![ver][VidV]][Vid]   | `.UseVideos()`          | Auto-embeds standalone video URLs and `![Title](url)` media links across YouTube, Vimeo, OneDrive, SharePoint/Stream, Azure, Loom, Dailymotion, Twitch, Wistia, Cloudflare Stream, Google Drive, Bilibili, Vidyard, and direct HTML5 video files.                                                                                                                                                                                       |
 | [`NuStreamDocs.Icons.Material`][IcM]        | [![ver][IcMV]][IcM]   | `.UseMaterialIcons()`   | Google Material Icons / Material Symbols (Outlined/Rounded/Sharp) — emits the stylesheet `<link>` so font-ligature spans render.                                                                                                                                                                                                                                                                                                         |
 | [`NuStreamDocs.Icons.MaterialDesign`][IcMD] | [![ver][IcMDV]][IcMD] | `new MdiIconResolver()` | **Inline-SVG** Material Design Icons (Pictogrammers MDI, ~7,400 icons). Plugs into the icon-shortcode rewriter as an `IIconResolver` so `:material-foo:` shortcodes inline the actual SVG path data — matches what mkdocs-material emits and works for the much larger MDI namespace (which Google Material Symbols doesn't fully cover). Path data is baked into a generated bucket-by-length switch; zero startup cost, ~50 ns lookup. |
 | [`NuStreamDocs.Icons.FontAwesome`][IcFA]    | [![ver][IcFAV]][IcFA] | `.UseFontAwesome()`     | Font Awesome Free from a configurable CDN.                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -516,6 +517,10 @@ Each is a separate assembly so you only pull what you use:
 [LB]: https://www.nuget.org/packages/NuStreamDocs.Lightbox/
 
 [LBV]: https://img.shields.io/nuget/v/NuStreamDocs.Lightbox.svg?label=
+
+[Vid]: https://www.nuget.org/packages/NuStreamDocs.Videos/
+
+[VidV]: https://img.shields.io/nuget/v/NuStreamDocs.Videos.svg?label=
 
 [IcM]: https://www.nuget.org/packages/NuStreamDocs.Icons.Material/
 
@@ -957,6 +962,41 @@ watches `docs/` for changes. Each save triggers a debounced rebuild and
 sends a reload signal over a websocket so connected browsers refresh
 automatically.
 
+### Embedded videos
+
+```csharp
+using NuStreamDocs.Videos;
+
+await new DocBuilder()
+    .WithInput("docs")
+    .WithOutput("site")
+    .WithSiteUrl("https://docs.example.com"u8)
+    .UseMaterial3Theme()
+    .UseVideos(opts => opts
+        .WithYouTubePrivacyEnhanced(true)
+        .WithVimeoDoNotTrack(true))
+    .BuildAsync();
+```
+
+Standalone video URLs and Markdown media links expand into responsive 16:9
+embeds (or 9:16 for YouTube Shorts) with lazy loading and accessible titles.
+Inline `[text](url)` links in prose stay regular hyperlinks by default:
+
+```markdown
+https://vimeo.com/76979871
+
+![Azure Walkthrough](https://www.videoindexer.ai/accounts/00000000-0000-0000-0000-000000000000/videos/a1b2c3d4e5)
+
+https://contoso.sharepoint.com/sites/eng/_layouts/15/stream.aspx?id=%2Fsites%2Feng%2Fdemo.mp4
+```
+
+Supported providers out of the box: YouTube (`youtube-nocookie.com` by
+default), Vimeo, OneDrive, Microsoft Stream / SharePoint, Azure AI Video
+Indexer / Azure Media Player / Azure Blob & CDN video files, Loom,
+Dailymotion, Twitch (VODs and Clips), Wistia, Cloudflare Stream, Google Drive,
+Bilibili, Vidyard, and direct `.mp4` / `.webm` / `.ogv` / `.m4v` / `.mov`
+links.
+
 ### Custom plugin
 
 ```csharp
@@ -1018,6 +1058,7 @@ options-customizer+logger).
 | **`NuStreamDocs.MarkdownExtensions`** | `.UseCommonMarkdownExtensions()`                             | Common Markdown block + inline extensions — admonitions, tabs, details, checklists, mark, footnotes, definition lists, attr-list, etc.                                                                                                                                                                         |
 | **`NuStreamDocs.Mermaid`**            | `.UseMermaid()`                                              | Retags fenced `mermaid` blocks; pulls the Mermaid runtime into the head.                                                                                                                                                                                                                                       |
 | **`NuStreamDocs.Lightbox`**           | `.UseLightbox()`                                             | glightbox image lightbox — adds glightbox CSS/JS and wraps content images.                                                                                                                                                                                                                                     |
+| **`NuStreamDocs.Videos`**             | `.UseVideos()`                                               | Zero-allocation UTF-8 video embed rewriter covering YouTube, Vimeo, OneDrive, SharePoint/Stream, Azure, Loom, Dailymotion, Twitch, Wistia, Cloudflare Stream, Google Drive, Bilibili, Vidyard, and direct HTML5 video files.                                                                                   |
 | **`NuStreamDocs.Privacy`**            | `.UsePrivacy()`                                              | Localizes external assets (img/link/script) under `assets/external/`; rewrites HTML to local paths. Byte-level UTF-8 throughout.                                                                                                                                                                               |
 | **`NuStreamDocs.Optimize`**           | `.UseOptimize()`, `.UseHtmlMinify()`                         | Output optimizer. HTML minify pass + pre-compressed `.gz` / `.br` siblings (truly-async .NET 10 stream APIs).                                                                                                                                                                                                  |
 | **`NuStreamDocs.LinkValidator`**      | `.UseLinkValidator()`                                        | Strict link validator. Internal mode (relative + anchors + nav/disk consistency); optional external HTTP-HEAD mode via Polly with host-batched throttling and retry.                                                                                                                                           |
