@@ -63,6 +63,7 @@
     <Project Path="NuStreamDocs.MagicLink/NuStreamDocs.MagicLink.csproj" />
     <Project Path="NuStreamDocs.Metadata/NuStreamDocs.Metadata.csproj" />
     <Project Path="NuStreamDocs.Sitemap/NuStreamDocs.Sitemap.csproj" />
+    <Project Path="NuStreamDocs.Llms/NuStreamDocs.Llms.csproj" />
     <Project Path="NuStreamDocs.SmartSymbols/NuStreamDocs.SmartSymbols.csproj" />
     <Project Path="NuStreamDocs.Snippets/NuStreamDocs.Snippets.csproj" />
     <Project Path="NuStreamDocs.SuperFences/NuStreamDocs.SuperFences.csproj" />
@@ -126,6 +127,7 @@
         <Project Path="tests/NuStreamDocs.MagicLink.Tests/NuStreamDocs.MagicLink.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Metadata.Tests/NuStreamDocs.Metadata.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Sitemap.Tests/NuStreamDocs.Sitemap.Tests.csproj" />
+        <Project Path="tests/NuStreamDocs.Llms.Tests/NuStreamDocs.Llms.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.SmartSymbols.Tests/NuStreamDocs.SmartSymbols.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Snippets.Tests/NuStreamDocs.Snippets.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.SuperFences.Tests/NuStreamDocs.SuperFences.Tests.csproj" />
