@@ -75,6 +75,43 @@ public static class HighlightStylesheet
         .highlight .gh { color: #6a737d; font-weight: 600; }
         .highlight .gu { color: #6a737d; }
 
+        /* Line numbers, highlighted lines, inline diff/focus, and callouts */
+        .highlight .nd-line { display: inline-block; min-width: 100%; }
+        .highlight .hll { background: rgba(255, 235, 59, 0.28); }
+        .highlight .nd-line--add { background: rgba(46, 160, 67, 0.16); }
+        .highlight .nd-line--del { background: rgba(248, 81, 73, 0.16); opacity: 0.85; }
+        .highlight.nd-has-focus .nd-line:not(.nd-line--focus) {
+          opacity: 0.42;
+          filter: blur(0.4px);
+          transition: opacity 0.18s ease, filter 0.18s ease;
+        }
+        .highlight.nd-has-focus:hover .nd-line { opacity: 1; filter: none; }
+        .highlight .linenos::before {
+          content: attr(data-line);
+          display: inline-block;
+          min-width: 2.2rem;
+          padding-right: 0.85rem;
+          text-align: right;
+          color: #8c959f;
+          user-select: none;
+        }
+        .highlight .nd-code-callout {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 1.25rem;
+          height: 1.25rem;
+          border-radius: 999px;
+          background: #0969da;
+          color: #ffffff;
+          font-size: 0.72rem;
+          font-weight: 700;
+          font-style: normal;
+          vertical-align: middle;
+          user-select: none;
+        }
+        ol.nd-code-annotations { margin-top: 0.5rem; padding-left: 1.5rem; border-left: 3px solid #0969da; }
+
         /* Slate / dark-mode palette */
         [data-md-color-scheme="slate"] .highlight { background: #161b22; }
         [data-md-color-scheme="slate"] .highlight .c,
@@ -104,6 +141,12 @@ public static class HighlightStylesheet
         [data-md-color-scheme="slate"] .highlight .gd { background: #67060c; color: #ffa198; }
         [data-md-color-scheme="slate"] .highlight .gh,
         [data-md-color-scheme="slate"] .highlight .gu { color: #8b949e; }
+        [data-md-color-scheme="slate"] .highlight .hll { background: rgba(187, 128, 9, 0.26); }
+        [data-md-color-scheme="slate"] .highlight .nd-line--add { background: rgba(46, 160, 67, 0.24); }
+        [data-md-color-scheme="slate"] .highlight .nd-line--del { background: rgba(248, 81, 73, 0.24); }
+        [data-md-color-scheme="slate"] .highlight .linenos::before { color: #6e7681; }
+        [data-md-color-scheme="slate"] .highlight .nd-code-callout { background: #2f81f7; }
+        [data-md-color-scheme="slate"] ol.nd-code-annotations { border-left-color: #2f81f7; }
         """u8;
 
     /// <summary>Returns a fresh copy of the stylesheet bytes; the asset registry takes ownership.</summary>

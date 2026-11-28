@@ -80,7 +80,7 @@ Each module ships as its own NuGet package so you only pull what you use. Click 
 | [`NuStreamDocs.Theme.Material`][TM] | [![ver][TMV]][TM] | [Guide](docs/modules/themes.md) | `.UseMaterialTheme()` | Classic `mkdocs-material` documentation theme. |
 | [`NuStreamDocs.Nav`][Nav] | [![ver][NavV]][Nav] | [Guide](docs/modules/nav-and-metadata.md) | `.UseNav()` | Sidebar navigation, `.pages` overrides, ordering, and orphan checks. |
 | [`NuStreamDocs.Toc`][Toc] | [![ver][TocV]][Toc] | [Guide](docs/modules/toc-and-tags.md) | `.UseToc()` | Per-page table of contents and heading permalink anchors. |
-| [`NuStreamDocs.Highlight`][Highlight] | [![ver][HighlightV]][Highlight] | [Guide](docs/modules/highlight.md) | `.UseHighlight()` | Server-side UTF-8 syntax highlighting, title bars, and copy buttons. |
+| [`NuStreamDocs.Highlight`][Highlight] | [![ver][HighlightV]][Highlight] | [Guide](docs/modules/highlight.md) | `.UseHighlight()` | Server-side UTF-8 syntax highlighting, line numbers, `hl_lines`, `[!code ++/--/focus]`, callouts, and copy buttons. |
 | [`NuStreamDocs.MarkdownExtensions`][MdExt] | [![ver][MdExtV]][MdExt] | [Guide](docs/modules/markdown-extensions.md) | `.UseCommonMarkdownExtensions()` | Admonitions, tabs, details, tables, footnotes, checklists, abbreviations, and CriticMarkup. |
 
 ### Search

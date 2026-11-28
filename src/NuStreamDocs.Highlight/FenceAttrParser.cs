@@ -15,6 +15,9 @@ namespace NuStreamDocs.Highlight;
 /// </summary>
 internal static class FenceAttrParser
 {
+    /// <summary>Combined byte length of an opening and closing quote pair.</summary>
+    private const int QuotePairStep = 2;
+
     /// <summary>Bytes that may start a recognized attribute (case-sensitive lower-ASCII first letters).</summary>
     private static readonly SearchValues<byte> AttrStarts = SearchValues.Create("htl"u8);
 
@@ -41,6 +44,45 @@ internal static class FenceAttrParser
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool TryGetHighlightLines(ReadOnlySpan<byte> info, out ReadOnlySpan<byte> value) =>
         TryGet(info, "hl_lines"u8, out value);
+
+    /// <summary>Tries to find a brace-enclosed highlight range token such as <c>{2,4-6}</c> outside quoted attribute values.</summary>
+    /// <param name="info">UTF-8 fence-info bytes.</param>
+    /// <param name="value">Inner range specification bytes on success.</param>
+    /// <returns>True when a non-empty unquoted <c>{...}</c> block is present.</returns>
+    internal static bool TryGetBraceHighlightLines(ReadOnlySpan<byte> info, out ReadOnlySpan<byte> value)
+    {
+        var cursor = 0;
+        while (cursor < info.Length)
+        {
+            var current = info[cursor];
+            if (current is (byte)'"' or (byte)'\'')
+            {
+                var closeQuote = info[(cursor + 1)..].IndexOf(current);
+                if (closeQuote < 0)
+                {
+                    break;
+                }
+
+                cursor += closeQuote + QuotePairStep;
+                continue;
+            }
+
+            if (current == (byte)'{')
+            {
+                var closeBrace = info[(cursor + 1)..].IndexOf((byte)'}');
+                if (closeBrace > 0)
+                {
+                    value = info.Slice(cursor + 1, closeBrace);
+                    return true;
+                }
+            }
+
+            cursor++;
+        }
+
+        value = default;
+        return false;
+    }
 
     /// <summary>Generic <c>key=...</c> lookup against <paramref name="info"/>.</summary>
     /// <param name="info">UTF-8 fence-info bytes.</param>
