@@ -56,6 +56,7 @@
     <Project Path="NuStreamDocs.ContentLoader.OpenApi/NuStreamDocs.ContentLoader.OpenApi.csproj" />
     <Project Path="NuStreamDocs.SphinxInventory/NuStreamDocs.SphinxInventory.csproj" />
     <Project Path="NuStreamDocs.Icons.MaterialDesign/NuStreamDocs.Icons.MaterialDesign.csproj" />
+    <Project Path="NuStreamDocs.Images/NuStreamDocs.Images.csproj" />
     <Project Path="NuStreamDocs.Arithmatex/NuStreamDocs.Arithmatex.csproj" />
     <Project Path="NuStreamDocs.Arithmatex.MathJax/NuStreamDocs.Arithmatex.MathJax.csproj" />
     <Project Path="NuStreamDocs.Emoji/NuStreamDocs.Emoji.csproj" />
@@ -120,6 +121,7 @@
         <Project Path="tests/NuStreamDocs.Bibliography.Tests/NuStreamDocs.Bibliography.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.SphinxInventory.Tests/NuStreamDocs.SphinxInventory.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Icons.MaterialDesign.Tests/NuStreamDocs.Icons.MaterialDesign.Tests.csproj" />
+        <Project Path="tests/NuStreamDocs.Images.Tests/NuStreamDocs.Images.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Emoji.Tests/NuStreamDocs.Emoji.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Keys.Tests/NuStreamDocs.Keys.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Macros.Tests/NuStreamDocs.Macros.Tests.csproj" />

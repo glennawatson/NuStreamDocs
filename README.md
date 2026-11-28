@@ -115,6 +115,7 @@ Each module ships as its own NuGet package so you only pull what you use. Click 
 | [`NuStreamDocs.Videos`][Vid] | [![ver][VidV]][Vid] | [Guide](docs/modules/videos.md) | `.UseVideos()` | Responsive embeds for YouTube, Vimeo, OneDrive, SharePoint/Stream, Azure, Loom, Dailymotion, Twitch, Wistia, Cloudflare, Google Drive, Bilibili, Vidyard, and HTML5 video. |
 | [`NuStreamDocs.Mermaid`][Mer] | [![ver][MerV]][Mer] | [Guide](docs/modules/mermaid-and-lightbox.md) | `.UseMermaid()` | Fenced `mermaid` diagram rendering. |
 | [`NuStreamDocs.Lightbox`][LB] | [![ver][LBV]][LB] | [Guide](docs/modules/mermaid-and-lightbox.md) | `.UseLightbox()` | `glightbox` zoomable content images. |
+| [`NuStreamDocs.Images`][Images] | [![ver][ImagesV]][Images] | [Guide](docs/modules/images.md) | `.UseImages()` | Zero-CLS PNG/JPEG/GIF/WebP/AVIF/SVG dimension reader, `loading="lazy"`, `decoding="async"`, and `<figure>` captions. |
 | [`NuStreamDocs.Icons.MaterialDesign`][IcMD] | [![ver][IcMDV]][IcMD] | [Guide](docs/modules/icons.md) | `new MdiIconResolver()` | Inline SVG Pictogrammers Material Design Icons (~7,400 icons). |
 | [`NuStreamDocs.Icons.Material`][IcM] | [![ver][IcMV]][IcM] | [Guide](docs/modules/icons.md) | `.UseMaterialIcons()` | Google Material Icons / Symbols stylesheet link. |
 | [`NuStreamDocs.Icons.FontAwesome`][IcFA] | [![ver][IcFAV]][IcFA] | [Guide](docs/modules/icons.md) | `.UseFontAwesome()` | Font Awesome Free stylesheet link. |
@@ -260,6 +261,8 @@ MIT. See [LICENSE](LICENSE) and [Acknowledgements & Third-Party Credits](docs/ac
 [MerV]: https://img.shields.io/nuget/v/NuStreamDocs.Mermaid.svg?label=
 [LB]: https://www.nuget.org/packages/NuStreamDocs.Lightbox/
 [LBV]: https://img.shields.io/nuget/v/NuStreamDocs.Lightbox.svg?label=
+[Images]: https://www.nuget.org/packages/NuStreamDocs.Images/
+[ImagesV]: https://img.shields.io/nuget/v/NuStreamDocs.Images.svg?label=
 [Vid]: https://www.nuget.org/packages/NuStreamDocs.Videos/
 [VidV]: https://img.shields.io/nuget/v/NuStreamDocs.Videos.svg?label=
 [IcM]: https://www.nuget.org/packages/NuStreamDocs.Icons.Material/

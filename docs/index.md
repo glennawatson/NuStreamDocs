@@ -34,6 +34,7 @@ Welcome to the complete user and module documentation for **NuStreamDocs**.
 ### Media & Icons
 - [Embedded Videos](modules/videos.md): `NuStreamDocs.Videos`
 - [Mermaid Diagrams & Image Lightbox](modules/mermaid-and-lightbox.md): `NuStreamDocs.Mermaid`, `NuStreamDocs.Lightbox`
+- [Responsive Images, Dimensions & Figures](modules/images.md): `NuStreamDocs.Images`
 - [Icon Packs](modules/icons.md): `NuStreamDocs.Icons.MaterialDesign`, `NuStreamDocs.Icons.Material`, `NuStreamDocs.Icons.FontAwesome`
 
 ### External Content, API Docs & Blogs
