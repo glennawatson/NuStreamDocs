@@ -16,6 +16,7 @@ Welcome to the complete user and module documentation for **NuStreamDocs**.
 - [Core Engine & Plugin Pipeline](modules/core.md): `NuStreamDocs`, `NuStreamDocs.Common`, `NuStreamDocs.Markdown.Common`, `NuStreamDocs.Templating`
 - [Themes (`Material` and `Material3`)](modules/themes.md): `NuStreamDocs.Theme.Material`, `NuStreamDocs.Theme.Material3`, `NuStreamDocs.Theme.Common`
 - [Configuration Readers](modules/configuration-readers.md): `NuStreamDocs.Config.MkDocs`, `NuStreamDocs.Config.Zensical`, `NuStreamDocs.Config.DocFx`
+- [Internationalization & Multi-Locale Routing](modules/i18n.md): `NuStreamDocs.I18n`
 
 ### Navigation, Search & Cross-References
 - [Navigation & Page Metadata](modules/nav-and-metadata.md): `NuStreamDocs.Nav`, `NuStreamDocs.Metadata`

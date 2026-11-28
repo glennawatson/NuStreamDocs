@@ -16,6 +16,7 @@
     <Project Path="NuStreamDocs.Serve/NuStreamDocs.Serve.csproj" />
     <Project Path="NuStreamDocs.Macros/NuStreamDocs.Macros.csproj" />
     <Project Path="NuStreamDocs.Layouts/NuStreamDocs.Layouts.csproj" />
+    <Project Path="NuStreamDocs.I18n/NuStreamDocs.I18n.csproj" />
     <Project Path="tests/NuStreamDocs.Serve.Tests/NuStreamDocs.Serve.Tests.csproj" />
     <Project Path="NuStreamDocs.Config.MkDocs/NuStreamDocs.Config.MkDocs.csproj" />
     <Project Path="NuStreamDocs.Config.Zensical/NuStreamDocs.Config.Zensical.csproj" />
@@ -82,6 +83,7 @@
         <Project Path="tests/NuStreamDocs.Tests/NuStreamDocs.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Nav.Tests/NuStreamDocs.Nav.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Templating.Tests/NuStreamDocs.Templating.Tests.csproj" />
+        <Project Path="tests/NuStreamDocs.I18n.Tests/NuStreamDocs.I18n.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Config.MkDocs.Tests/NuStreamDocs.Config.MkDocs.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Config.DocFx.Tests/NuStreamDocs.Config.DocFx.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Config.Zensical.Tests/NuStreamDocs.Config.Zensical.Tests.csproj" />

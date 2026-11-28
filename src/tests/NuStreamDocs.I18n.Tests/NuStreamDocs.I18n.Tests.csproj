@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NuStreamDocs.I18n\NuStreamDocs.I18n.csproj"/>
+    <ProjectReference Include="..\..\NuStreamDocs.Sitemap\NuStreamDocs.Sitemap.csproj"/>
+    <ProjectReference Include="..\..\NuStreamDocs.Theme.Material3\NuStreamDocs.Theme.Material3.csproj"/>
+  </ItemGroup>
+
+</Project>
