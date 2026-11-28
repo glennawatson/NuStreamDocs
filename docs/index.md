@@ -29,6 +29,7 @@ Welcome to the complete user and module documentation for **NuStreamDocs**.
 ### Markdown Authoring & Code
 - [Syntax Highlighting & SuperFences](modules/highlight.md): `NuStreamDocs.Highlight`, `NuStreamDocs.SuperFences`
 - [Markdown Extensions](modules/markdown-extensions.md): `NuStreamDocs.MarkdownExtensions`
+- [Glossary & Term Auto-Linker](modules/glossary.md): `NuStreamDocs.Glossary`
 - [Snippets, Macros & Layouts](modules/snippets-macros-layouts.md): `NuStreamDocs.Snippets`, `NuStreamDocs.Macros`, `NuStreamDocs.Layouts`
 - [Bibliography & Citations](modules/bibliography.md): `NuStreamDocs.Bibliography`
 - [Math, Emoji, Keys, SmartSymbols & MagicLink](modules/inline-extensions.md): `NuStreamDocs.Arithmatex`, `NuStreamDocs.Arithmatex.MathJax`, `NuStreamDocs.Emoji`, `NuStreamDocs.Keys`, `NuStreamDocs.SmartSymbols`, `NuStreamDocs.MagicLink`

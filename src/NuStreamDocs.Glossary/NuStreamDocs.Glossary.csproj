@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <PackageId>NuStreamDocs.Glossary</PackageId>
+    <Description>Central glossary page generator and accessible whole-word &lt;abbr&gt; term auto-linker for NuStreamDocs.</Description>
+    <RootNamespace>NuStreamDocs.Glossary</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+    <ProjectReference Include="..\NuStreamDocs.Config.MkDocs\NuStreamDocs.Config.MkDocs.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Glossary.Tests"/>
+  </ItemGroup>
+
+</Project>

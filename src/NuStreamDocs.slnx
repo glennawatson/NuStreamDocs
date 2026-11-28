@@ -41,6 +41,7 @@
     <Project Path="NuStreamDocs.Lightbox/NuStreamDocs.Lightbox.csproj" />
     <Project Path="NuStreamDocs.Blog/NuStreamDocs.Blog.csproj" />
     <Project Path="NuStreamDocs.Blog.MkDocs/NuStreamDocs.Blog.MkDocs.csproj" />
+    <Project Path="NuStreamDocs.Glossary/NuStreamDocs.Glossary.csproj" />
     <Project Path="NuStreamDocs.Feed/NuStreamDocs.Feed.csproj" />
     <Project Path="NuStreamDocs.Optimize/NuStreamDocs.Optimize.csproj" />
     <Project Path="NuStreamDocs.LinkValidator/NuStreamDocs.LinkValidator.csproj" />
@@ -107,6 +108,7 @@
         <Project Path="tests/NuStreamDocs.Lightbox.Tests/NuStreamDocs.Lightbox.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Blog.Tests/NuStreamDocs.Blog.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Blog.MkDocs.Tests/NuStreamDocs.Blog.MkDocs.Tests.csproj" />
+        <Project Path="tests/NuStreamDocs.Glossary.Tests/NuStreamDocs.Glossary.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Feed.Tests/NuStreamDocs.Feed.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Optimize.Tests/NuStreamDocs.Optimize.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.LinkValidator.Tests/NuStreamDocs.LinkValidator.Tests.csproj" />
