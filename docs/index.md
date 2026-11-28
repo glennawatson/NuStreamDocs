@@ -20,6 +20,7 @@ Welcome to the complete user and module documentation for **NuStreamDocs**.
 
 ### Navigation, Search & Cross-References
 - [Navigation & Page Metadata](modules/nav-and-metadata.md): `NuStreamDocs.Nav`, `NuStreamDocs.Metadata`
+- [Schema Loaders (`JSON Schema`, `GraphQL`, `AsyncAPI`)](modules/content-loader-schemas.md): `NuStreamDocs.ContentLoader.Schemas`
 - [Table of Contents & Tags](modules/toc-and-tags.md): `NuStreamDocs.Toc`, `NuStreamDocs.Tags`
 - [Cross-References (`Autorefs`, `Xrefs`, `SphinxInventory`)](modules/cross-references.md): `NuStreamDocs.Autorefs`, `NuStreamDocs.Xrefs`, `NuStreamDocs.SphinxInventory`
 - [Search (`Pagefind`, `Lunr`, `SQLite`)](modules/search.md): `NuStreamDocs.Search`, `NuStreamDocs.Search.Pagefind`, `NuStreamDocs.Search.Lunr`, `NuStreamDocs.Search.Sqlite`

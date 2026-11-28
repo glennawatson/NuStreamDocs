@@ -23,6 +23,7 @@
     <Project Path="NuStreamDocs.Config.DocFx/NuStreamDocs.Config.DocFx.csproj" />
     <Project Path="NuStreamDocs.Nav/NuStreamDocs.Nav.csproj" />
     <Project Path="NuStreamDocs.Theme.Common/NuStreamDocs.Theme.Common.csproj" />
+    <Project Path="NuStreamDocs.ContentLoader.Schemas/NuStreamDocs.ContentLoader.Schemas.csproj" />
     <Project Path="NuStreamDocs.Bibliography/NuStreamDocs.Bibliography.csproj" />
     <Project Path="NuStreamDocs.Blog.Common/NuStreamDocs.Blog.Common.csproj" />
     <Project Path="NuStreamDocs.Theme.Material/NuStreamDocs.Theme.Material.csproj" />
@@ -93,6 +94,7 @@
         <Project Path="tests/NuStreamDocs.Theme.Material.Tests/NuStreamDocs.Theme.Material.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Theme.Material3.Tests/NuStreamDocs.Theme.Material3.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Theme.IntegrationTests/NuStreamDocs.Theme.IntegrationTests.csproj" />
+        <Project Path="tests/NuStreamDocs.ContentLoader.Schemas.Tests/NuStreamDocs.ContentLoader.Schemas.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Icons.FontAwesome.Tests/NuStreamDocs.Icons.FontAwesome.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Icons.Material.Tests/NuStreamDocs.Icons.Material.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Search.Tests/NuStreamDocs.Search.Tests.csproj" />
