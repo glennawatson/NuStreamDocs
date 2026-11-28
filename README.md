@@ -107,6 +107,7 @@ Each module ships as its own NuGet package so you only pull what you use. Click 
 | [`NuStreamDocs.Emoji`][Emoji] | [![ver][EmojiV]][Emoji] | [Guide](docs/modules/inline-extensions.md) | `.UseEmoji()` | `:shortcode:` Twemoji spans. |
 | [`NuStreamDocs.Keys`][Keys] | [![ver][KeysV]][Keys] | [Guide](docs/modules/inline-extensions.md) | `.UseKeys()` | `++ctrl+alt+del++` keyboard chord markup. |
 | [`NuStreamDocs.SmartSymbols`][Smart] | [![ver][SmartV]][Smart] | [Guide](docs/modules/inline-extensions.md) | `.UseSmartSymbols()` | Typographic arrows, fractions, and `(c)` / `(tm)` symbols. |
+| [`NuStreamDocs.Glossary`][Gloss] | [![ver][GlossV]][Gloss] | [Guide](docs/modules/glossary.md) | `.UseGlossary()` | Central glossary page generator and accessible `<abbr>` term tooltips. |
 | [`NuStreamDocs.MagicLink`][Magic] | [![ver][MagicV]][Magic] | [Guide](docs/modules/inline-extensions.md) | `.UseMagicLink()` | Bare URL and email autolinking. |
 
 ### Media & Icons
@@ -205,6 +206,8 @@ MIT. See [LICENSE](LICENSE) and [Acknowledgements & Third-Party Credits](docs/ac
 [NavV]: https://img.shields.io/nuget/v/NuStreamDocs.Nav.svg?label=
 [Toc]: https://www.nuget.org/packages/NuStreamDocs.Toc/
 [TocV]: https://img.shields.io/nuget/v/NuStreamDocs.Toc.svg?label=
+[Gloss]: https://www.nuget.org/packages/NuStreamDocs.Glossary/
+[GlossV]: https://img.shields.io/nuget/v/NuStreamDocs.Glossary.svg?label=
 [Highlight]: https://www.nuget.org/packages/NuStreamDocs.Highlight/
 [HighlightV]: https://img.shields.io/nuget/v/NuStreamDocs.Highlight.svg?label=
 [Search]: https://www.nuget.org/packages/NuStreamDocs.Search/
