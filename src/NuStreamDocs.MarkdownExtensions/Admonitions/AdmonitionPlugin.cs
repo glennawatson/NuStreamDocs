@@ -10,7 +10,7 @@ using NuStreamDocs.Plugins;
 
 namespace NuStreamDocs.MarkdownExtensions.Admonitions;
 
-/// <summary>Admonition plugin — rewrites <c>!!! type "title"</c> blocks into <c>&lt;div class="admonition type"&gt;</c> HTML and ships the matching stylesheet.</summary>
+/// <summary>Rewrites <c>!!! type "title"</c> blocks and GitHub <c>&gt; [!TYPE]</c> alerts into admonition HTML and ships the stylesheet.</summary>
 [System.Diagnostics.DebuggerDisplay("AdmonitionPlugin: {Name}")]
 public sealed class AdmonitionPlugin : IPagePreRenderPlugin, IStaticAssetProvider, IHeadExtraProvider
 {
@@ -22,8 +22,9 @@ public sealed class AdmonitionPlugin : IPagePreRenderPlugin, IStaticAssetProvide
            .admonition .admonition-title{font-weight:700;margin:0 0 .4em}
            .admonition.note{border-left-color:#448aff;background:rgba(68,138,255,.1)}
            .admonition.tip,.admonition.hint{border-left-color:#00bfa5;background:rgba(0,191,165,.1)}
-           .admonition.warning,.admonition.caution,.admonition.attention{border-left-color:#ff9100;background:rgba(255,145,0,.1)}
-           .admonition.danger,.admonition.error{border-left-color:#ff1744;background:rgba(255,23,68,.1)}
+           .admonition.important{border-left-color:#7c4dff;background:rgba(124,77,255,.1)}
+           .admonition.warning,.admonition.attention{border-left-color:#ff9100;background:rgba(255,145,0,.1)}
+           .admonition.danger,.admonition.caution,.admonition.error{border-left-color:#ff1744;background:rgba(255,23,68,.1)}
            .admonition.info,.admonition.todo{border-left-color:#00b8d4;background:rgba(0,184,212,.1)}
            .admonition.success,.admonition.check{border-left-color:#00c853;background:rgba(0,200,83,.1)}
            .admonition.quote,.admonition.cite{border-left-color:#9e9e9e;background:rgba(158,158,158,.1)}
@@ -32,6 +33,24 @@ public sealed class AdmonitionPlugin : IPagePreRenderPlugin, IStaticAssetProvide
 
     /// <summary>Relative path for the css asset.</summary>
     private static readonly FilePath AssetFilePath = new("assets/extensions/admonition.css");
+
+    /// <summary>Configured admonition options.</summary>
+    private readonly AdmonitionOptions _options;
+
+    /// <summary>Initializes a new instance of the <see cref="AdmonitionPlugin"/> class with default options.</summary>
+    public AdmonitionPlugin()
+        : this(AdmonitionOptions.Default)
+    {
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="AdmonitionPlugin"/> class.</summary>
+    /// <param name="options">Admonition options.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is <c>null</c>.</exception>
+    public AdmonitionPlugin(AdmonitionOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        _options = options;
+    }
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Name => "admonitions"u8;
@@ -48,12 +67,13 @@ public sealed class AdmonitionPlugin : IPagePreRenderPlugin, IStaticAssetProvide
     /// <inheritdoc/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool NeedsRewrite(ReadOnlySpan<byte> source) =>
-        MarkdownMarkerProbes.HasAdmonitionOpener(source);
+        MarkdownMarkerProbes.HasAdmonitionOpener(source)
+        || (_options.GitHubAlerts && MarkdownMarkerProbes.HasGitHubAlertOpener(source));
 
     /// <inheritdoc/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreRender(in PagePreRenderContext context) =>
-        AdmonitionRewriter.Rewrite(context.Source, context.Output);
+        AdmonitionRewriter.Rewrite(context.Source, _options.GitHubAlerts, context.Output);
 
     /// <inheritdoc/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

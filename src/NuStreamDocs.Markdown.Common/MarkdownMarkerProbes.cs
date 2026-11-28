@@ -22,6 +22,12 @@ public static class MarkdownMarkerProbes
     public static bool HasAdmonitionOpener(ReadOnlySpan<byte> source) =>
         source.IndexOf("!!! "u8) >= 0;
 
+    /// <summary>True when <paramref name="source"/> contains a GitHub alert marker prefix (<c>[!</c>).</summary>
+    /// <param name="source">UTF-8 markdown source.</param>
+    /// <returns>True when the source contains the marker.</returns>
+    public static bool HasGitHubAlertOpener(ReadOnlySpan<byte> source) =>
+        source.IndexOf("[!"u8) >= 0;
+
     /// <summary>True when <paramref name="source"/> contains a details opener (<c>??? </c> or <c>???+</c>) — both share the <c>???</c> prefix.</summary>
     /// <param name="source">UTF-8 markdown source.</param>
     /// <returns>True when the source contains the marker.</returns>

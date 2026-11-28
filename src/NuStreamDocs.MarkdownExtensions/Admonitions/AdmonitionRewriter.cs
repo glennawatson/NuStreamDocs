@@ -3,43 +3,38 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 using NuStreamDocs.Markdown.Common;
 using NuStreamDocs.MarkdownExtensions.Internal;
 
 namespace NuStreamDocs.MarkdownExtensions.Admonitions;
 
-/// <summary>Rewrites <c>!!! type "title"</c> blocks into <c>&lt;div class="admonition type"&gt;</c> HTML.</summary>
+/// <summary>Rewrites <c>!!! type "title"</c> blocks and optional GitHub <c>&gt; [!TYPE]</c> alerts into <c>&lt;div class="admonition type"&gt;</c> HTML.</summary>
 internal static class AdmonitionRewriter
 {
     /// <summary>Gets the opener marker.</summary>
     private static ReadOnlySpan<byte> Opener => "!!! "u8;
 
-    /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
+    /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/> with GitHub alerts enabled.</summary>
     /// <param name="source">UTF-8 markdown bytes.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void Rewrite(ReadOnlySpan<byte> source, IBufferWriter<byte> writer) =>
+        Rewrite(source, true, writer);
+
+    /// <summary>Rewrites <paramref name="source"/> into <paramref name="writer"/>.</summary>
+    /// <param name="source">UTF-8 markdown bytes.</param>
+    /// <param name="gitHubAlerts">Whether to convert GitHub <c>&gt; [!TYPE]</c> blockquotes.</param>
+    /// <param name="writer">UTF-8 sink.</param>
+    internal static void Rewrite(ReadOnlySpan<byte> source, bool gitHubAlerts, IBufferWriter<byte> writer)
     {
         var i = 0;
         while (i < source.Length)
         {
-            if (MarkdownCodeScanner.AtLineStart(source, i)
-                && TryParseOpener(
-                    source,
-                    i,
-                    out var typeStart,
-                    out var typeLen,
-                    out var titleStart,
-                    out var titleLen,
-                    out var headerEnd))
+            if (TryRewriteBlockAt(source, i, gitHubAlerts, writer, out var blockEnd))
             {
-                var bodyEnd = IndentedBlockScanner.ConsumeBody(source, headerEnd);
-                EmitAdmonition(
-                    source.Slice(typeStart, typeLen),
-                    titleLen is 0 ? default : source.Slice(titleStart, titleLen),
-                    source[headerEnd..bodyEnd],
-                    writer);
-                i = bodyEnd;
+                i = blockEnd;
                 continue;
             }
 
@@ -47,6 +42,49 @@ internal static class AdmonitionRewriter
             writer.Write(source[i..lineEnd]);
             i = lineEnd;
         }
+    }
+
+    /// <summary>Tries to rewrite or skip a fenced code block, <c>!!!</c> admonition, or GitHub alert at <paramref name="offset"/>.</summary>
+    /// <param name="source">UTF-8 markdown source.</param>
+    /// <param name="offset">Line-start offset.</param>
+    /// <param name="gitHubAlerts">Whether GitHub alerts are enabled.</param>
+    /// <param name="writer">Output sink.</param>
+    /// <param name="blockEnd">Exclusive end offset of the handled block.</param>
+    /// <returns><c>true</c> when a block was consumed.</returns>
+    private static bool TryRewriteBlockAt(
+        ReadOnlySpan<byte> source,
+        int offset,
+        bool gitHubAlerts,
+        IBufferWriter<byte> writer,
+        out int blockEnd)
+    {
+        if (MarkdownCodeScanner.TryConsumeFence(source, offset, out blockEnd))
+        {
+            writer.Write(source[offset..blockEnd]);
+            return true;
+        }
+
+        if (TryParseOpener(source, offset, out var typeStart, out var typeLen, out var titleStart, out var titleLen, out var headerEnd))
+        {
+            blockEnd = IndentedBlockScanner.ConsumeBody(source, headerEnd);
+            EmitAdmonition(
+                source.Slice(typeStart, typeLen),
+                titleLen is 0 ? default : source.Slice(titleStart, titleLen),
+                source[headerEnd..blockEnd],
+                false,
+                writer);
+            return true;
+        }
+
+        if (gitHubAlerts
+            && GitHubAlertScanner.TryParseAlert(source, offset, out var alertType, out var alertTitle, out var alertHeaderEnd, out blockEnd))
+        {
+            EmitAdmonition(alertType, alertTitle, source[alertHeaderEnd..blockEnd], true, writer);
+            return true;
+        }
+
+        blockEnd = 0;
+        return false;
     }
 
     /// <summary>Tries to parse an admonition opener starting at <paramref name="offset"/>.</summary>
@@ -88,11 +126,13 @@ internal static class AdmonitionRewriter
     /// <param name="type">UTF-8 type token.</param>
     /// <param name="title">UTF-8 title bytes; empty span when no title was specified.</param>
     /// <param name="body">UTF-8 body bytes.</param>
+    /// <param name="isBlockquoteBody"><c>true</c> to strip <c>&gt;</c> prefixes; <c>false</c> to de-indent 4-space lines.</param>
     /// <param name="writer">UTF-8 sink.</param>
     private static void EmitAdmonition(
         ReadOnlySpan<byte> type,
         ReadOnlySpan<byte> title,
         ReadOnlySpan<byte> body,
+        bool isBlockquoteBody,
         IBufferWriter<byte> writer)
     {
         writer.Write("\n<div class=\"admonition "u8);
@@ -108,7 +148,15 @@ internal static class AdmonitionRewriter
         }
 
         writer.Write("</p>\n\n"u8);
-        IndentedBlockScanner.WriteDeindented(body, writer);
+        if (isBlockquoteBody)
+        {
+            GitHubAlertScanner.WriteStrippedQuoteBody(body, writer);
+        }
+        else
+        {
+            IndentedBlockScanner.WriteDeindented(body, writer);
+        }
+
         writer.Write("\n</div>\n\n"u8);
     }
 }

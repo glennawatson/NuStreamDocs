@@ -34,14 +34,23 @@ builder
 
 ## Syntax Quick Reference
 
-### Admonitions & Collapsible Details
+### Admonitions, GitHub Alerts & Collapsible Details
 
 ```markdown
 !!! note "Important Configuration"
     Indented body content rendered inside a styled callout box.
 
+> [!WARNING]
+> GitHub blockquote alerts (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`) render as styled admonitions automatically.
+
 ??? warning "Click to expand"
     Collapsed `<details>` callout (`???+` starts expanded).
+```
+
+To disable GitHub blockquote alerts while keeping `!!! type` admonitions:
+
+```csharp
+builder.UseAdmonitions(static options => options with { GitHubAlerts = false });
 ```
 
 ### Content Tabs

@@ -35,10 +35,31 @@ public static class DocBuilderMarkdownExtensions
     /// <param name="builder">The builder to configure.</param>
     extension(DocBuilder builder)
     {
-        /// <summary>Registers <see cref="AdmonitionPlugin"/>.</summary>
+        /// <summary>Registers <see cref="AdmonitionPlugin"/> with default options (including GitHub alerts).</summary>
         /// <returns>The builder for chaining.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DocBuilder UseAdmonitions() => builder.UsePlugin(new AdmonitionPlugin());
+
+        /// <summary>Registers <see cref="AdmonitionPlugin"/> with <paramref name="options"/>.</summary>
+        /// <param name="options">Admonition options.</param>
+        /// <returns>The builder for chaining.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is <c>null</c>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DocBuilder UseAdmonitions(AdmonitionOptions options)
+        {
+            ArgumentNullException.ThrowIfNull(options);
+            return builder.UsePlugin(new AdmonitionPlugin(options));
+        }
+
+        /// <summary>Registers <see cref="AdmonitionPlugin"/> configured via <paramref name="configure"/>.</summary>
+        /// <param name="configure">Options transform.</param>
+        /// <returns>The builder for chaining.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="configure"/> is <c>null</c>.</exception>
+        public DocBuilder UseAdmonitions(Func<AdmonitionOptions, AdmonitionOptions> configure)
+        {
+            ArgumentNullException.ThrowIfNull(configure);
+            return builder.UsePlugin(new AdmonitionPlugin(configure(AdmonitionOptions.Default)));
+        }
 
         /// <summary>Registers <see cref="DetailsPlugin"/>.</summary>
         /// <returns>The builder for chaining.</returns>
