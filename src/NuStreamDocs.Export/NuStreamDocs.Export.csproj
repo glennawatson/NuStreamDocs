@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <PackageId>NuStreamDocs.Export</PackageId>
+    <Description>Consolidates a NuStreamDocs site into a standalone print-ready and PDF-ready single-page HTML bundle (/print.html) with a cover header, table of contents, rewritten cross-page anchors, and @media print page-break rules.</Description>
+    <RootNamespace>NuStreamDocs.Export</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Export.Tests"/>
+  </ItemGroup>
+
+</Project>

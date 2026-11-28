@@ -78,6 +78,7 @@
     <Project Path="NuStreamDocs.Transitions/NuStreamDocs.Transitions.csproj" />
     <Project Path="NuStreamDocs.Videos/NuStreamDocs.Videos.csproj" />
     <Project Path="NuStreamDocs.Xrefs/NuStreamDocs.Xrefs.csproj" />
+    <Project Path="NuStreamDocs.Export/NuStreamDocs.Export.csproj" />
     <Folder Name="/Solution Items/Workflows/">
         <File Path="..\.github\workflows\ci.yml" />
         <File Path="..\.github\workflows\codeql.yml" />
@@ -148,6 +149,7 @@
         <Project Path="tests/NuStreamDocs.Transitions.Tests/NuStreamDocs.Transitions.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Videos.Tests/NuStreamDocs.Videos.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Xrefs.Tests/NuStreamDocs.Xrefs.Tests.csproj" />
+        <Project Path="tests/NuStreamDocs.Export.Tests/NuStreamDocs.Export.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.ParityCheck.Tests/NuStreamDocs.ParityCheck.Tests.csproj" />
     </Folder>
     <Folder Name="/benchmarks/">
