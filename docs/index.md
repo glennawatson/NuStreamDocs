@@ -43,6 +43,7 @@ Welcome to the complete user and module documentation for **NuStreamDocs**.
 
 ### Site Emitters, Security, Quality & Dev Server
 - [Sitemap, 404 & Redirects](modules/sitemap-and-redirects.md): `NuStreamDocs.Sitemap`, `NuStreamDocs.Redirects`
+- [AI & LLM Endpoints (`llms.txt`)](modules/llms.md): `NuStreamDocs.Llms`
 - [Privacy, CSP & Self-Hosted Fonts](modules/privacy-csp-fonts.md): `NuStreamDocs.Privacy`, `NuStreamDocs.Csp`, `NuStreamDocs.Fonts`
 - [Optimization, HTML Audit & Link Validation](modules/optimize-audit-validator.md): `NuStreamDocs.Optimize`, `NuStreamDocs.Audit`, `NuStreamDocs.LinkValidator`
 - [View Transitions & Live-Reload Dev Server](modules/transitions-and-serve.md): `NuStreamDocs.Transitions`, `NuStreamDocs.Serve`

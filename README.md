@@ -144,6 +144,7 @@ Each module ships as its own NuGet package so you only pull what you use. Click 
 | [`NuStreamDocs.Autorefs`][Auto] | [![ver][AutoV]][Auto] | [Guide](docs/modules/cross-references.md) | `.UseAutorefs()` | Cross-page `@autoref:ID` heading and UID resolution. |
 | [`NuStreamDocs.Xrefs`][Xref] | [![ver][XrefV]][Xref] | [Guide](docs/modules/cross-references.md) | `.UseXrefs()` | DocFX `xrefmap.json` emission and external xrefmap import. |
 | [`NuStreamDocs.SphinxInventory`][Sphinx] | [![ver][SphinxV]][Sphinx] | [Guide](docs/modules/cross-references.md) | `.UseSphinxInventory()` | Sphinx v2 `objects.inv` intersphinx emitter. |
+| [`NuStreamDocs.Llms`][Llms] | [![ver][LlmsV]][Llms] | [Guide](docs/modules/llms.md) | `.UseLlms()` | Emits `/llms.txt`, `/llms-full.txt`, and clean `.md` page siblings for AI coding assistants. |
 | [`NuStreamDocs.Privacy`][Priv] | [![ver][PrivV]][Priv] | [Guide](docs/modules/privacy-csp-fonts.md) | `.UsePrivacy()` | Downloads third-party assets into `assets/external/` at build time. |
 | [`NuStreamDocs.Csp`][Csp] | [![ver][CspV]][Csp] | [Guide](docs/modules/privacy-csp-fonts.md) | `.UseCsp(...)` | Per-page SHA-256 hashed `Content-Security-Policy` meta injection. |
 | [`NuStreamDocs.Fonts`][Fonts] | [![ver][FontsV]][Fonts] | [Guide](docs/modules/privacy-csp-fonts.md) | `.UseFonts(...)` | Build-time `.woff2` font self-hosting with zero-CLS fallback metrics. |
@@ -241,6 +242,8 @@ MIT. See [LICENSE](LICENSE) and [Acknowledgements & Third-Party Credits](docs/ac
 [XrefV]: https://img.shields.io/nuget/v/NuStreamDocs.Xrefs.svg?label=
 [Sphinx]: https://www.nuget.org/packages/NuStreamDocs.SphinxInventory/
 [SphinxV]: https://img.shields.io/nuget/v/NuStreamDocs.SphinxInventory.svg?label=
+[Llms]: https://www.nuget.org/packages/NuStreamDocs.Llms/
+[LlmsV]: https://img.shields.io/nuget/v/NuStreamDocs.Llms.svg?label=
 [Layouts]: https://www.nuget.org/packages/NuStreamDocs.Layouts/
 [LayoutsV]: https://img.shields.io/nuget/v/NuStreamDocs.Layouts.svg?label=
 [LV]: https://www.nuget.org/packages/NuStreamDocs.LinkValidator/
