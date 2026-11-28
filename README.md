@@ -91,6 +91,7 @@ Each module ships as its own NuGet package so you only pull what you use. Click 
 | [`NuStreamDocs.Search.Lunr`][Lunr] | [![ver][LunrV]][Lunr] | [Guide](docs/modules/search.md) | `.UseLunrSearch()` | Pure-JS Lunr-compatible JSON search index. |
 | [`NuStreamDocs.Search.Sqlite`][SqliteSearch] | [![ver][SqliteSearchV]][SqliteSearch] | [Guide](docs/modules/search.md) | `.UseSqliteSearch()` | Single-file `search.db` (SQLite FTS5 over HTTP Range requests) for large sites. |
 | [`NuStreamDocs.Search`][Search] | [![ver][SearchV]][Search] | [Guide](docs/modules/search.md) | `.UseSearch()` | Shared search base and section-priority ranking metadata. |
+| [`NuStreamDocs.Playgrounds`][Play] | [![ver][PlayV]][Play] | [Guide](docs/modules/playgrounds.md) | `.UsePlaygrounds()` | Interactive HTTP API request consoles and sandboxed live code embeds. |
 
 ### Authoring & Markdown Syntax
 
@@ -238,6 +239,8 @@ MIT. See [LICENSE](LICENSE) and [Acknowledgements & Third-Party Credits](docs/ac
 [MagicV]: https://img.shields.io/nuget/v/NuStreamDocs.MagicLink.svg?label=
 [Smart]: https://www.nuget.org/packages/NuStreamDocs.SmartSymbols/
 [SmartV]: https://img.shields.io/nuget/v/NuStreamDocs.SmartSymbols.svg?label=
+[Play]: https://www.nuget.org/packages/NuStreamDocs.Playgrounds/
+[PlayV]: https://img.shields.io/nuget/v/NuStreamDocs.Playgrounds.svg?label=
 [Snip]: https://www.nuget.org/packages/NuStreamDocs.Snippets/
 [SnipV]: https://img.shields.io/nuget/v/NuStreamDocs.Snippets.svg?label=
 [SF]: https://www.nuget.org/packages/NuStreamDocs.SuperFences/

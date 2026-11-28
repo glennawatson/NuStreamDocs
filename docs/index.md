@@ -34,6 +34,7 @@ Welcome to the complete user and module documentation for **NuStreamDocs**.
 - [Snippets, Macros & Layouts](modules/snippets-macros-layouts.md): `NuStreamDocs.Snippets`, `NuStreamDocs.Macros`, `NuStreamDocs.Layouts`
 - [Bibliography & Citations](modules/bibliography.md): `NuStreamDocs.Bibliography`
 - [Math, Emoji, Keys, SmartSymbols & MagicLink](modules/inline-extensions.md): `NuStreamDocs.Arithmatex`, `NuStreamDocs.Arithmatex.MathJax`, `NuStreamDocs.Emoji`, `NuStreamDocs.Keys`, `NuStreamDocs.SmartSymbols`, `NuStreamDocs.MagicLink`
+- [API & Code Playgrounds](modules/playgrounds.md): `NuStreamDocs.Playgrounds`
 
 ### Media & Icons
 - [Embedded Videos](modules/videos.md): `NuStreamDocs.Videos`
