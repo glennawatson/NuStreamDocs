@@ -23,11 +23,11 @@ jobs:
       DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE: 1
     steps:
     - name: Checkout repository
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
     - name: Setup .NET Environment
-      uses: glennawatson/actions-common/.github/actions/dotnet-environment@d1a1652f1d0e4ad7d2f77bda30b58f4b42ab0748 # main
+      uses: glennawatson/actions-common/.github/actions/dotnet-environment@ead59b84e2a4a83b6d1c94d1a8f4985bca437f95 # main
       with:
         dotnet-versions: |
           10.0.x
@@ -35,16 +35,16 @@ jobs:
         minver-tag-prefix: 'v'
         minver-auto-increment: 'minor'
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d
+      uses: github/codeql-action/init@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
       with:
         languages: csharp
         build-mode: manual
         queries: security-extended
     - name: Build
-      uses: glennawatson/actions-common/.github/actions/dotnet-build@d1a1652f1d0e4ad7d2f77bda30b58f4b42ab0748 # main
+      uses: glennawatson/actions-common/.github/actions/dotnet-build@ead59b84e2a4a83b6d1c94d1a8f4985bca437f95 # main
       with:
         solution-file: NuStreamDocs.slnx
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d
+      uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
       with:
         category: "/language:csharp"

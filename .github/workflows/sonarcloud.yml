@@ -19,19 +19,19 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
     - name: Checkout
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
     - name: Setup .NET Environment
       id: environment
-      uses: glennawatson/actions-common/.github/actions/dotnet-environment@d1a1652f1d0e4ad7d2f77bda30b58f4b42ab0748 # main
+      uses: glennawatson/actions-common/.github/actions/dotnet-environment@ead59b84e2a4a83b6d1c94d1a8f4985bca437f95 # main
       with:
         dotnet-versions: |
           10.0.x
           11.0.x
     - name: Begin Sonar analysis
       id: sonar-begin
-      uses: glennawatson/actions-common/.github/actions/sonarcloud@d1a1652f1d0e4ad7d2f77bda30b58f4b42ab0748 # main
+      uses: glennawatson/actions-common/.github/actions/sonarcloud@ead59b84e2a4a83b6d1c94d1a8f4985bca437f95 # main
       with:
         mode: begin
         project-key: glennawatson_NuStreamDocs
@@ -43,17 +43,17 @@ jobs:
         test-exclusions: '**/tests/**,**/benchmarks/**,**/tools/**'
         working-directory: src
     - name: Build
-      uses: glennawatson/actions-common/.github/actions/dotnet-build@d1a1652f1d0e4ad7d2f77bda30b58f4b42ab0748 # main
+      uses: glennawatson/actions-common/.github/actions/dotnet-build@ead59b84e2a4a83b6d1c94d1a8f4985bca437f95 # main
       with:
         solution-file: NuStreamDocs.slnx
         create-packages: 'false'
     - name: Test with MTP coverage
-      uses: glennawatson/actions-common/.github/actions/dotnet-test@d1a1652f1d0e4ad7d2f77bda30b58f4b42ab0748 # main
+      uses: glennawatson/actions-common/.github/actions/dotnet-test@ead59b84e2a4a83b6d1c94d1a8f4985bca437f95 # main
       with:
         solution-file: NuStreamDocs.slnx
     - name: End Sonar analysis
       if: always() && steps.sonar-begin.outcome == 'success'
-      uses: glennawatson/actions-common/.github/actions/sonarcloud@d1a1652f1d0e4ad7d2f77bda30b58f4b42ab0748 # main
+      uses: glennawatson/actions-common/.github/actions/sonarcloud@ead59b84e2a4a83b6d1c94d1a8f4985bca437f95 # main
       with:
         mode: end
         project-key: glennawatson_NuStreamDocs
