@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <PackageId>NuStreamDocs.ContentLoader.Schemas</PackageId>
+    <Description>NuStreamDocs content loaders that generate reference documentation pages from JSON Schema (Draft-07 / 2020-12), GraphQL SDL (.graphql / .gql), and AsyncAPI (2.x / 3.x JSON or YAML) specifications in pure UTF-8.</Description>
+    <RootNamespace>NuStreamDocs.ContentLoader.Schemas</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs.ContentLoader\NuStreamDocs.ContentLoader.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.ContentLoader.Schemas.Tests"/>
+  </ItemGroup>
+
+</Project>

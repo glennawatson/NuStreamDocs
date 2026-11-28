@@ -128,6 +128,7 @@ Each module ships as its own NuGet package so you only pull what you use. Click 
 | [`NuStreamDocs.CSharpApiGenerator`][Api] | [![ver][ApiV]][Api] | [Guide](docs/modules/csharp-api-generator.md) | `.UseCSharpApiGenerator()` | Generates C# API reference pages from NuGet packages or DLLs. |
 | [`NuStreamDocs.ContentLoader`][CL] | [![ver][CLV]][CL] | [Guide](docs/modules/content-loaders.md) | `.UseContentLoaders(...)` | Synthesizes pages from JSON/YAML files, REST/GraphQL endpoints, and raw URLs. |
 | [`NuStreamDocs.ContentLoader.OpenApi`][CLOAS] | [![ver][CLOASV]][CLOAS] | [Guide](docs/modules/content-loaders.md) | `new OpenApiContentLoader(...)` | Generates REST reference pages from OpenAPI 3.x specs. |
+| [`NuStreamDocs.ContentLoader.Schemas`][CLSchemas] | [![ver][CLSchemasV]][CLSchemas] | [Guide](docs/modules/content-loader-schemas.md) | `new JsonSchemaContentLoader(...)` | Generates reference pages from JSON Schema, GraphQL SDL, and AsyncAPI specs. |
 | [`NuStreamDocs.ContentLoader.GitHub`][CLGH] | [![ver][CLGHV]][CLGH] | [Guide](docs/modules/content-loaders.md) | `new GitHubContentLoader(...)` | Pulls remote repo Markdown trees and GitHub Releases changelogs. |
 | [`NuStreamDocs.ContentLoader.Feed`][CLFeed] | [![ver][CLFeedV]][CLFeed] | [Guide](docs/modules/content-loaders.md) | `new FeedContentLoader(...)` | Imports external RSS/Atom items as documentation pages. |
 | [`NuStreamDocs.Blog.MkDocs`][BlogMk] | [![ver][BlogMkV]][BlogMk] | [Guide](docs/modules/blog-and-feed.md) | `.UseMkDocsBlog()` | `mkdocs-material`-flavored `blog/posts/` index and category archives. |
@@ -190,6 +191,8 @@ MIT. See [LICENSE](LICENSE) and [Acknowledgements & Third-Party Credits](docs/ac
 [TcV]: https://img.shields.io/nuget/v/NuStreamDocs.Theme.Common.svg?label=
 [TM]: https://www.nuget.org/packages/NuStreamDocs.Theme.Material/
 [TMV]: https://img.shields.io/nuget/v/NuStreamDocs.Theme.Material.svg?label=
+[CLSchemas]: https://www.nuget.org/packages/NuStreamDocs.ContentLoader.Schemas/
+[CLSchemasV]: https://img.shields.io/nuget/v/NuStreamDocs.ContentLoader.Schemas.svg?label=
 [TM3]: https://www.nuget.org/packages/NuStreamDocs.Theme.Material3/
 [TM3V]: https://img.shields.io/nuget/v/NuStreamDocs.Theme.Material3.svg?label=
 [Cfg1]: https://www.nuget.org/packages/NuStreamDocs.Config.MkDocs/
