@@ -317,13 +317,25 @@ public class PrivacyPluginLifecycleTests
         }
     }
 
-    /// <summary>Tiny HttpListener-backed server for loopback fetches.</summary>
+    /// <summary>Single-bind TcpListener loopback HTTP/1.1 server avoiding HttpListener port-race and disposal flakes.</summary>
     private sealed class LoopbackHttpServer : IAsyncDisposable
     {
-        /// <summary>Maximum number of attempts to bind the HTTP listener before giving up.</summary>
-        private const int MaxListenerBindAttempts = 3;
+        /// <summary>Read buffer size for incoming loopback HTTP request headers.</summary>
+        private const int HeaderBufferSize = 4096;
 
-        /// <summary>Routes registered before <c>Start</c> is called.</summary>
+        /// <summary>HTTP 200 status code.</summary>
+        private const int StatusOk = 200;
+
+        /// <summary>HTTP 404 status code.</summary>
+        private const int StatusNotFound = 404;
+
+        /// <summary>HTTP 503 status code.</summary>
+        private const int StatusServiceUnavailable = 503;
+
+        /// <summary>Synchronizes route tables and hit counters across concurrent connections.</summary>
+        private readonly Lock _gate = new();
+
+        /// <summary>Routes registered for the server.</summary>
         private readonly Dictionary<string, (string ContentType, byte[] Bytes)> _routes = [with(StringComparer.Ordinal)];
 
         /// <summary>Flaky routes that fail a fixed number of times before succeeding.</summary>
@@ -333,13 +345,13 @@ public class PrivacyPluginLifecycleTests
         /// <summary>Per-route hit counter.</summary>
         private readonly Dictionary<string, int> _hits = [with(StringComparer.Ordinal)];
 
-        /// <summary>Underlying HTTP listener.</summary>
-        private readonly HttpListener _listener = new();
+        /// <summary>Single-bind loopback TCP listener.</summary>
+        private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
 
-        /// <summary>Cancellation source for the request pump.</summary>
+        /// <summary>Cancellation source for the accept and connection tasks.</summary>
         private readonly CancellationTokenSource _cts = new();
 
-        /// <summary>Background task that pumps requests; null until <c>Start</c> runs.</summary>
+        /// <summary>Background accept loop task.</summary>
         private Task? _pump;
 
         /// <summary>Gets the base URL of the running server (with trailing slash).</summary>
@@ -351,8 +363,11 @@ public class PrivacyPluginLifecycleTests
         /// <param name="bytes">Response body.</param>
         public void AddRoute(string absolutePath, string contentType, byte[] bytes)
         {
-            _routes[absolutePath] = (contentType, bytes);
-            _hits[absolutePath] = 0;
+            lock (_gate)
+            {
+                _routes[absolutePath] = (contentType, bytes);
+                _hits[absolutePath] = 0;
+            }
         }
 
         /// <summary>Adds a flaky route that returns 503 for the first <paramref name="failuresBeforeSuccess"/> requests, then the bytes.</summary>
@@ -362,154 +377,203 @@ public class PrivacyPluginLifecycleTests
         /// <param name="failuresBeforeSuccess">Number of 503s to emit before the first success.</param>
         public void AddFlakyRoute(string absolutePath, string contentType, byte[] bytes, int failuresBeforeSuccess)
         {
-            _flakyRoutes[absolutePath] = (contentType, bytes, failuresBeforeSuccess);
-            _hits[absolutePath] = 0;
+            lock (_gate)
+            {
+                _flakyRoutes[absolutePath] = (contentType, bytes, failuresBeforeSuccess);
+                _hits[absolutePath] = 0;
+            }
         }
 
-        /// <summary>Picks a free port and starts the listener, retrying if the port is taken by another process.</summary>
+        /// <summary>Binds an OS-assigned loopback port atomically and starts accepting HTTP requests.</summary>
         public void Start()
         {
-            for (var attempt = 0; attempt < MaxListenerBindAttempts; attempt++)
-            {
-                _listener.Prefixes.Clear();
-                var port = GetFreePort();
-                BaseUrl = $"http://127.0.0.1:{port}/";
-                _listener.Prefixes.Add(BaseUrl);
-
-                try
-                {
-                    _listener.Start();
-                    _pump = Task.Run(() => Pump(_cts.Token), _cts.Token);
-                    return;
-                }
-                catch (HttpListenerException)
-                {
-                    if (attempt == MaxListenerBindAttempts - 1)
-                    {
-                        throw;
-                    }
-                }
-            }
+            _listener.Start();
+            var port = ((IPEndPoint)_listener.LocalEndpoint).Port;
+            BaseUrl = $"http://127.0.0.1:{port}/";
+            _pump = PumpAsync(_cts.Token);
         }
 
         /// <summary>Returns the number of requests served for <paramref name="absolutePath"/>.</summary>
         /// <param name="absolutePath">URL path.</param>
         /// <returns>Hit count.</returns>
-        public int HitCountFor(string absolutePath) =>
-            _hits.TryGetValue(absolutePath, out var count) ? count : 0;
+        public int HitCountFor(string absolutePath)
+        {
+            lock (_gate)
+            {
+                return _hits.TryGetValue(absolutePath, out var count) ? count : 0;
+            }
+        }
 
         /// <inheritdoc/>
         public async ValueTask DisposeAsync()
         {
             await _cts.CancelAsync().ConfigureAwait(false);
-            try
-            {
-                _listener.Stop();
-            }
-            catch (ObjectDisposedException)
-            {
-                // Already disposed; nothing to do.
-            }
+            _listener.Stop();
 
             if (_pump is not null)
             {
-                try
-                {
-                    await _pump.ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    // Expected on cancellation.
-                }
-                catch (HttpListenerException)
-                {
-                    // Expected when the listener stop races the pump.
-                }
+                await _pump.ConfigureAwait(false);
             }
 
             _cts.Dispose();
-            _listener.Close();
+            _listener.Dispose();
         }
 
-        /// <summary>Asks the OS for a free TCP port.</summary>
-        /// <returns>An unused port number.</returns>
-        private static int GetFreePort()
+        /// <summary>Extracts the request path from the first line of raw HTTP request headers.</summary>
+        /// <param name="headerBytes">UTF-8 header bytes.</param>
+        /// <returns>Normalized URL path.</returns>
+        private static string ParseRequestPath(ReadOnlySpan<byte> headerBytes)
         {
-            using TcpListener l = new(IPAddress.Loopback, 0);
-            l.Start();
-            try
+            var firstSpace = headerBytes.IndexOf((byte)' ');
+            if (firstSpace < 0)
             {
-                return ((IPEndPoint)l.LocalEndpoint).Port;
+                return "/";
             }
-            finally
-            {
-                l.Stop();
-            }
+
+            var afterMethod = headerBytes[(firstSpace + 1)..];
+            var endTarget = afterMethod.IndexOfAny((byte)' ', (byte)'\r', (byte)'\n');
+            var rawTarget = endTarget < 0 ? afterMethod : afterMethod[..endTarget];
+            var queryIdx = rawTarget.IndexOf((byte)'?');
+            var pathSlice = queryIdx < 0 ? rawTarget : rawTarget[..queryIdx];
+            return pathSlice.IsEmpty ? "/" : Encoding.UTF8.GetString(pathSlice);
         }
 
-        /// <summary>Pumps requests until cancellation.</summary>
+        /// <summary>Reads from <paramref name="stream"/> until the <c>\r\n\r\n</c> header terminator is seen.</summary>
+        /// <param name="stream">Connected client stream.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>A task that completes on shutdown.</returns>
-        private async Task Pump(CancellationToken cancellationToken)
+        /// <returns>Accumulated header bytes, or empty on disconnect.</returns>
+        private static async Task<byte[]> ReadHeadersAsync(NetworkStream stream, CancellationToken cancellationToken)
         {
+            var buffer = new byte[HeaderBufferSize];
+            var total = 0;
+            while (total < buffer.Length)
+            {
+                var read = await stream.ReadAsync(buffer.AsMemory(total), cancellationToken).ConfigureAwait(false);
+                if (read == 0)
+                {
+                    break;
+                }
+
+                total += read;
+                if (buffer.AsSpan(0, total).IndexOf("\r\n\r\n"u8) >= 0)
+                {
+                    break;
+                }
+            }
+
+            return buffer[..total];
+        }
+
+        /// <summary>Accepts loopback clients until cancelled and awaits in-flight client handlers.</summary>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Task completing after shutdown.</returns>
+        private async Task PumpAsync(CancellationToken cancellationToken)
+        {
+            List<Task> activeClients = [];
             while (!cancellationToken.IsCancellationRequested)
             {
-                HttpListenerContext context;
+                TcpClient client;
                 try
                 {
-                    context = await _listener.GetContextAsync().ConfigureAwait(false);
+                    client = await _listener.AcceptTcpClientAsync(cancellationToken).ConfigureAwait(false);
                 }
-                catch (HttpListenerException)
+                catch (OperationCanceledException)
                 {
-                    return;
+                    break;
+                }
+                catch (SocketException)
+                {
+                    break;
                 }
                 catch (ObjectDisposedException)
                 {
-                    return;
+                    break;
                 }
 
-                Serve(context);
+                activeClients.Add(HandleClientAsync(client, cancellationToken));
+            }
+
+            for (var i = 0; i < activeClients.Count; i++)
+            {
+                await activeClients[i].ConfigureAwait(false);
             }
         }
 
-        /// <summary>Serves one request from the registered route map.</summary>
-        /// <param name="context">Request context.</param>
-        private void Serve(HttpListenerContext context)
+        /// <summary>Serves a single HTTP/1.1 request over <paramref name="client"/> and closes the connection.</summary>
+        /// <param name="client">Accepted TCP client.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Async task.</returns>
+        private async Task HandleClientAsync(TcpClient client, CancellationToken cancellationToken)
         {
-            var path = context.Request.Url?.AbsolutePath ?? string.Empty;
-            if (_hits.TryGetValue(path, out var count))
+            using (client)
             {
-                _hits[path] = count + 1;
-            }
-
-            if (_flakyRoutes.TryGetValue(path, out var flaky))
-            {
-                if (flaky.FailuresRemaining > 0)
+                try
                 {
-                    _flakyRoutes[path] = flaky with { FailuresRemaining = flaky.FailuresRemaining - 1 };
-                    context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                }
-                else
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.OK;
-                    context.Response.ContentType = flaky.ContentType;
-                    context.Response.ContentLength64 = flaky.Bytes.Length;
-                    context.Response.OutputStream.Write(flaky.Bytes, 0, flaky.Bytes.Length);
-                }
-            }
-            else if (_routes.TryGetValue(path, out var route))
-            {
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
-                context.Response.ContentType = route.ContentType;
-                context.Response.ContentLength64 = route.Bytes.Length;
-                context.Response.OutputStream.Write(route.Bytes, 0, route.Bytes.Length);
-            }
-            else
-            {
-                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-            }
+                    await using var stream = client.GetStream();
+                    var headers = await ReadHeadersAsync(stream, cancellationToken).ConfigureAwait(false);
+                    if (headers.Length == 0)
+                    {
+                        return;
+                    }
 
-            context.Response.Close();
+                    var path = ParseRequestPath(headers);
+                    var (statusCode, reason, contentType, body) = ResolveRoute(path);
+                    var responseHead = Encoding.ASCII.GetBytes(
+                        $"HTTP/1.1 {statusCode} {reason}\r\nContent-Type: {contentType}\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n");
+                    await stream.WriteAsync(responseHead, cancellationToken).ConfigureAwait(false);
+                    if (body.Length > 0)
+                    {
+                        await stream.WriteAsync(body, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected during server shutdown.
+                }
+                catch (IOException)
+                {
+                    // Expected if client closes early.
+                }
+                catch (SocketException)
+                {
+                    // Expected if socket resets during teardown.
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Expected if stream disposes concurrently with shutdown.
+                }
+            }
+        }
+
+        /// <summary>Resolves the HTTP response tuple and increments hit counters under lock.</summary>
+        /// <param name="path">Request path.</param>
+        /// <returns>Status code, reason phrase, content type, and payload bytes.</returns>
+        private (int StatusCode, string Reason, string ContentType, byte[] Body) ResolveRoute(string path)
+        {
+            lock (_gate)
+            {
+                if (_hits.TryGetValue(path, out var count))
+                {
+                    _hits[path] = count + 1;
+                }
+
+                if (_flakyRoutes.TryGetValue(path, out var flaky))
+                {
+                    if (flaky.FailuresRemaining > 0)
+                    {
+                        _flakyRoutes[path] = flaky with { FailuresRemaining = flaky.FailuresRemaining - 1 };
+                        return (StatusServiceUnavailable, "Service Unavailable", "text/plain", []);
+                    }
+
+                    return (StatusOk, "OK", flaky.ContentType, flaky.Bytes);
+                }
+
+                return _routes.TryGetValue(path, out var route)
+                    ? (StatusOk, "OK", route.ContentType, route.Bytes)
+                    : (StatusNotFound, "Not Found", "text/plain", []);
+            }
         }
     }
 }
