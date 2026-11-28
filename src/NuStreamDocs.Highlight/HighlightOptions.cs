@@ -35,6 +35,12 @@ public sealed record HighlightOptions(
         false,
         []);
 
+    /// <summary>Gets a value indicating whether every highlighted code block emits line numbers starting at 1 unless overridden per fence.</summary>
+    public bool LineNumbers { get; init; }
+
+    /// <summary>Gets a value indicating whether inline diff/focus comments (<c>[!code ++|--|focus]</c>) and callout markers (<c>(1)!</c>) are processed.</summary>
+    public bool EnableAnnotations { get; init; } = true;
+
     /// <summary>Creates a new <see cref="HighlightOptions"/> instance from string-shaped <c>(name, lexer)</c> pairs.</summary>
     /// <param name="extra">Pairs of UTF-16 lexer name and lexer instance.</param>
     /// <returns>A new <see cref="HighlightOptions"/> with the supplied lexers and the default flags.</returns>
