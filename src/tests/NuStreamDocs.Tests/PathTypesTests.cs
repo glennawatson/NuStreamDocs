@@ -149,4 +149,25 @@ public class PathTypesTests
         await Assert.That(pattern.Value).IsEqualTo("**/*.md");
         await Assert.That(pattern.IsEmpty).IsFalse();
     }
+
+    /// <summary><see cref="DirectoryPath.DeleteRecursive"/> clears read-only file attributes so Git object trees delete cleanly on Windows.</summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task DeleteRecursive_ReadOnlyFilesAndEmptyDirectory_DeletesCleanly(CancellationToken cancellationToken)
+    {
+        var tempTree = Directory.CreateTempSubdirectory("nstd-delrec-");
+        var lockedFile = Path.Combine(tempTree.FullName, "pack-obj");
+        await File.WriteAllBytesAsync(lockedFile, "blob"u8.ToArray(), cancellationToken);
+        File.SetAttributes(lockedFile, FileAttributes.ReadOnly);
+
+        DirectoryPath treePath = new(tempTree.FullName);
+        treePath.DeleteRecursive(true);
+        await Assert.That(treePath.Exists()).IsFalse();
+
+        var emptyDir = Directory.CreateTempSubdirectory("nstd-delempty-");
+        DirectoryPath emptyPath = new(emptyDir.FullName);
+        emptyPath.DeleteRecursive(false);
+        await Assert.That(emptyPath.Exists()).IsFalse();
+    }
 }

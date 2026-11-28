@@ -199,10 +199,20 @@ public readonly record struct DirectoryPath(string Value)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Delete() => Directory.Delete(Value);
 
-    /// <summary>Deletes the directory and, when <paramref name="recursive"/> is true, everything inside.</summary>
+    /// <summary>Deletes the directory and, when <paramref name="recursive"/> is true, everything inside (clearing read-only attributes first).</summary>
     /// <param name="recursive">When true, deletes the entire subtree.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DeleteRecursive(bool recursive) => Directory.Delete(Value, recursive);
+    public void DeleteRecursive(bool recursive)
+    {
+        if (recursive && Directory.Exists(Value))
+        {
+            foreach (var entry in Directory.EnumerateFiles(Value, "*", SearchOption.AllDirectories))
+            {
+                System.IO.File.SetAttributes(entry, FileAttributes.Normal);
+            }
+        }
+
+        Directory.Delete(Value, recursive);
+    }
 
     /// <summary>Enumerates files at the top level of this directory.</summary>
     /// <returns>Matching file paths.</returns>
