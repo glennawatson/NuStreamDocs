@@ -153,6 +153,7 @@ Each module ships as its own NuGet package so you only pull what you use. Click 
 | [`NuStreamDocs.LinkValidator`][LV] | [![ver][LVV]][LV] | [Guide](docs/modules/optimize-audit-validator.md) | `.UseLinkValidator()` | Strict internal anchor/path checker and throttled external URL validator. |
 | [`NuStreamDocs.Transitions`][Trans] | [![ver][TransV]][Trans] | [Guide](docs/modules/transitions-and-serve.md) | `.UseTransitions(...)` | View Transitions soft router with hover prefetching. |
 | [`NuStreamDocs.Serve`][Serve] | [![ver][ServeV]][Serve] | [Guide](docs/modules/transitions-and-serve.md) | `.WatchAndServeAsync()` | Debounced file watcher, Kestrel static server, and WebSocket LiveReload. |
+| [`NuStreamDocs.Social`][Social] | [![ver][SocialV]][Social] | [Guide](docs/modules/social.md) | `.UseSocial()` | OpenGraph, Twitter/X cards, canonical URLs, Schema.org JSON-LD, and `1200x630` SVG social preview cards. |
 | [`NuStreamDocs.Config.MkDocs`][Cfg1] | [![ver][Cfg1V]][Cfg1] | [Guide](docs/modules/configuration-readers.md) | `.UseMkDocsConfig()` | Span-based `mkdocs.yml` configuration reader. |
 | [`NuStreamDocs.Config.Zensical`][Cfg2] | [![ver][Cfg2V]][Cfg2] | [Guide](docs/modules/configuration-readers.md) | `.UseZensicalConfig()` | Span-based `zensical.toml` configuration reader. |
 | [`NuStreamDocs.Config.DocFx`][CfgDfx] | [![ver][CfgDfxV]][CfgDfx] | [Guide](docs/modules/configuration-readers.md) | `.WithDocFxToc()` | DocFX `toc.yml` navigation reader. |
@@ -290,6 +291,8 @@ MIT. See [LICENSE](LICENSE) and [Acknowledgements & Third-Party Credits](docs/ac
 [CLOASV]: https://img.shields.io/nuget/v/NuStreamDocs.ContentLoader.OpenApi.svg?label=
 [Opt]: https://www.nuget.org/packages/NuStreamDocs.Optimize/
 [OptV]: https://img.shields.io/nuget/v/NuStreamDocs.Optimize.svg?label=
+[Social]: https://www.nuget.org/packages/NuStreamDocs.Social/
+[SocialV]: https://img.shields.io/nuget/v/NuStreamDocs.Social.svg?label=
 [Api]: https://www.nuget.org/packages/NuStreamDocs.CSharpApiGenerator/
 [ApiV]: https://img.shields.io/nuget/v/NuStreamDocs.CSharpApiGenerator.svg?label=
 [Bc]: https://www.nuget.org/packages/NuStreamDocs.Blog.Common/

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <PackageId>NuStreamDocs.Social</PackageId>
+    <Description>Generates OpenGraph meta tags, Twitter/X card metadata, canonical links, Schema.org TechArticle JSON-LD, and deterministic branded SVG social preview cards (assets/social/*.svg) for every documentation page in pure UTF-8 with zero external dependencies.</Description>
+    <RootNamespace>NuStreamDocs.Social</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Social.Tests"/>
+  </ItemGroup>
+
+</Project>

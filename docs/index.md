@@ -39,6 +39,7 @@ Welcome to the complete user and module documentation for **NuStreamDocs**.
 ### External Content, API Docs & Blogs
 - [Content Loaders (`File`, `HTTP`, `Feed`, `GitHub`, `OpenAPI`)](modules/content-loaders.md): `NuStreamDocs.ContentLoader`, `NuStreamDocs.ContentLoader.Feed`, `NuStreamDocs.ContentLoader.GitHub`, `NuStreamDocs.ContentLoader.OpenApi`
 - [C# API Reference Generator](modules/csharp-api-generator.md): `NuStreamDocs.CSharpApiGenerator`
+- [Social Cards, OpenGraph & JSON-LD](modules/social.md): `NuStreamDocs.Social`
 - [Blogs & RSS/Atom Feeds](modules/blog-and-feed.md): `NuStreamDocs.Blog`, `NuStreamDocs.Blog.MkDocs`, `NuStreamDocs.Feed`
 
 ### Site Emitters, Security, Quality & Dev Server
