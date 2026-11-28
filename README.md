@@ -11,7 +11,7 @@
 
 <br>
 <a href="https://github.com/glennawatson/NuStreamDocs">
-  <img width="160" height="160" src="https://raw.githubusercontent.com/glennawatson/NuStreamDocs/main/icons/nustreamdocs.png" alt="NuStreamDocs">
+  <img width="160" height="160" src="https://raw.githubusercontent.com/glennawatson/NuStreamDocs/main/icons/nustreamdocs.png?v=2" alt="NuStreamDocs">
 </a>
 <br>
 
