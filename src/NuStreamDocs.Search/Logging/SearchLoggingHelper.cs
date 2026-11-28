@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NuStreamDocs.Common;
 
@@ -16,10 +15,6 @@ internal static partial class SearchLoggingHelper
     /// <param name="documentCount">Documents harvested from the rendered pages.</param>
     /// <param name="formatName">Engine format name (UTF-8) — surfaced in the log message so multi-engine sites can tell builds apart.</param>
     /// <param name="outputDir">Search subdirectory under the site output root.</param>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
     internal static void LogIndexBuildStart(
         ILogger logger,
         int documentCount,
@@ -39,10 +34,6 @@ internal static partial class SearchLoggingHelper
     /// <param name="recordCount">Records written to the index.</param>
     /// <param name="totalContentBytes">Total UTF-8 byte length of the indexed text.</param>
     /// <param name="outputDir">Search subdirectory under the site output root.</param>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
     internal static void LogIndexBuildComplete(
         ILogger logger,
         int recordCount,
@@ -61,10 +52,6 @@ internal static partial class SearchLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="slug">UTF-8 site-relative URL bytes for the document.</param>
     /// <param name="contentLength">UTF-8 byte length of the indexed text.</param>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "False positive: GetString call is gated on logger.IsEnabled above.")]
     internal static void LogDocumentIndexed(ILogger logger, ReadOnlySpan<byte> slug, int contentLength)
     {
         if (!logger.IsEnabled(LogLevel.Debug))

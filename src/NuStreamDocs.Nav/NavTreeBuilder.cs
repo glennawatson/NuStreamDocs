@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.FileSystemGlobbing;
@@ -51,10 +50,6 @@ internal static class NavTreeBuilder
     /// <param name="logger">Logger that receives start/complete events.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "Logging is not a performance bottleneck.")]
     internal static NavNode Build(in DirectoryPath inputRoot, in NavOptions options, ILogger logger) =>
         Build(inputRoot, in options, false, logger);
 
@@ -79,10 +74,6 @@ internal static class NavTreeBuilder
     /// <param name="syntheticEntries">Nav metadata contributed by discovery plugins for synthetic pages; empty when none.</param>
     /// <param name="logger">Logger that receives start/complete events.</param>
     /// <returns>Root <see cref="NavNode"/>; an empty section node when the root is missing.</returns>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "Logging is not a performance bottleneck.")]
     internal static NavNode Build(
         in DirectoryPath inputRoot,
         in NavOptions options,

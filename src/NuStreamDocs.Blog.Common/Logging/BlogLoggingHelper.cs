@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace NuStreamDocs.Blog.Common.Logging;
@@ -37,10 +36,6 @@ internal static partial class BlogLoggingHelper
     /// <param name="slug">URL-safe slug as UTF-8 bytes.</param>
     /// <param name="published">Publish date.</param>
     /// <param name="title">Post title as UTF-8 bytes.</param>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging arguments",
-        Justification = "Caller gates on IsEnabled before the encode runs; the analyzer cannot see across the wrapper.")]
     internal static void LogPostDiscovered(
         ILogger logger,
         ReadOnlySpan<byte> slug,

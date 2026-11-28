@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace NuStreamDocs.Highlight;
@@ -90,10 +89,6 @@ public sealed class Lexer
     /// <typeparam name="TSink">Caller-supplied sink shape.</typeparam>
     /// <param name="source">UTF-8 source bytes.</param>
     /// <param name="sink">Sink invoked per token; passed by reference to avoid copying stateful structs.</param>
-    [SuppressMessage(
-        "Design",
-        "CA1045:Do not pass types by reference",
-        Justification = "Needed for allocation-free token emission with mutable struct sinks.")]
     public void Tokenize<TSink>(ReadOnlySpan<byte> source, ref TSink sink)
         where TSink : struct, ITokenSink
     {

@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging.Abstractions;
 using NuStreamDocs.CSharpApiGenerator.Logging;
 using NuStreamDocs.Common;
@@ -121,10 +120,6 @@ public static class CSharpApiGenerator
     /// <summary>Emits the generator-start log only when the configured level is enabled.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="options">Generator options.</param>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "DescribeInputs is gated on logger.IsEnabled; analyzer doesn't see through the source-generated [LoggerMessage] partial.")]
     private static void LogGeneratorStartIfEnabled(ILogger logger, CSharpApiGeneratorOptions options)
     {
         if (!logger.IsEnabled(LogLevel.Information))
@@ -138,10 +133,6 @@ public static class CSharpApiGenerator
     /// <summary>Emits the direct-extract-start log only when the configured level is enabled.</summary>
     /// <param name="logger">Target logger.</param>
     /// <param name="options">Generator options.</param>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "DescribeInputs is gated on logger.IsEnabled; analyzer doesn't see through the source-generated [LoggerMessage] partial.")]
     private static void LogDirectExtractStartIfEnabled(ILogger logger, CSharpApiGeneratorOptions options)
     {
         if (!logger.IsEnabled(LogLevel.Information))

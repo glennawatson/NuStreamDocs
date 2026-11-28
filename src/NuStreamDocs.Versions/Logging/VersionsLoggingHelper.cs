@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Versions.Logging;
@@ -14,10 +13,6 @@ internal static partial class VersionsLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions discovered in the manifest.</param>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
     internal static void LogManifestRead(ILogger logger, in DirectoryPath path, int versionCount)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -32,10 +27,6 @@ internal static partial class VersionsLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="path">Manifest path.</param>
     /// <param name="versionCount">Versions written to the manifest.</param>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
     internal static void LogManifestWrite(ILogger logger, in DirectoryPath path, int versionCount)
     {
         if (!logger.IsEnabled(LogLevel.Information))

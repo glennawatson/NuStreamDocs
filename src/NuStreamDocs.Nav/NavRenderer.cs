@@ -4,7 +4,6 @@
 
 using System.Buffers;
 using System.Buffers.Text;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using NuStreamDocs.Common;
 
@@ -35,10 +34,6 @@ internal static class NavRenderer
     /// <param name="tree">Flat nav tree.</param>
     /// <param name="activeIndex">Index of the active node in <paramref name="tree"/>, or <c>-1</c> when no page is active.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    [SuppressMessage(
-        "Roslynator",
-        "RCS1118:Mark local variable as const",
-        Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
     internal static void RenderFull(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
@@ -53,10 +48,6 @@ internal static class NavRenderer
     /// <param name="tree">Flat nav tree.</param>
     /// <param name="activeIndex">Active node index, or <c>-1</c> when no page is active.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    [SuppressMessage(
-        "Roslynator",
-        "RCS1118:Mark local variable as const",
-        Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
     internal static void RenderSidebarFull(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
@@ -70,10 +61,6 @@ internal static class NavRenderer
     /// <param name="tree">Flat nav tree.</param>
     /// <param name="activeIndex">Active node index, or <c>-1</c> when no page is active.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    [SuppressMessage(
-        "Roslynator",
-        "RCS1118:Mark local variable as const",
-        Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
     internal static void RenderPruned(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];
@@ -88,10 +75,6 @@ internal static class NavRenderer
     /// <param name="tree">Flat nav tree.</param>
     /// <param name="activeIndex">Active node index, or <c>-1</c> when no page is active.</param>
     /// <param name="writer">UTF-8 sink.</param>
-    [SuppressMessage(
-        "Roslynator",
-        "RCS1118:Mark local variable as const",
-        Justification = "Mutated through 'ref' chained call sites; analyzer false positive.")]
     internal static void RenderSidebarPruned(NavTree tree, int activeIndex, IBufferWriter<byte> writer)
     {
         Span<int> chainBuffer = stackalloc int[ActiveBranchStackBufferSize];

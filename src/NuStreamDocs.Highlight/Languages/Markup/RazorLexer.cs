@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Highlight.Languages.CFamily;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 using NuStreamDocs.Highlight.Languages.Common.Markup;
@@ -92,26 +91,10 @@ public static class RazorLexer
     private static readonly SearchValues<byte> CloseBraceFirst = SearchValues.Create("}"u8);
 
     /// <summary>Gets the singleton lexer instance.</summary>
-    [SuppressMessage(
-        "StyleCop.CSharp.ReadabilityRules",
-        "SA1114",
-        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
-    [SuppressMessage(
-        "StyleCop.CSharp.ReadabilityRules",
-        "SA1115",
-        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
     public static Lexer Instance { get; } = Build();
 
     /// <summary>Builds the Razor lexer with all five states populated.</summary>
     /// <returns>Configured lexer.</returns>
-    [SuppressMessage(
-        "StyleCop.CSharp.ReadabilityRules",
-        "SA1114",
-        Justification = "Rule lists read top-to-bottom with comments.")]
-    [SuppressMessage(
-        "StyleCop.CSharp.ReadabilityRules",
-        "SA1115",
-        Justification = "Rule lists read top-to-bottom with comments.")]
     private static Lexer Build()
     {
         LexerRule[][] states =

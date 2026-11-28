@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using NuStreamDocs.Common;
 
@@ -28,10 +27,6 @@ internal static partial class PagefindCliLogging
     /// <param name="logger">Target logger.</param>
     /// <param name="binary">Resolved binary path.</param>
     /// <param name="siteRoot">Rendered site directory.</param>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "False positive: implicit DirectoryPath-to-string conversion is gated on logger.IsEnabled.")]
     internal static void LogInvoking(ILogger logger, string binary, in DirectoryPath siteRoot)
     {
         if (!logger.IsEnabled(LogLevel.Information))

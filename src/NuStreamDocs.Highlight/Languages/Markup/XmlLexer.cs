@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 using NuStreamDocs.Highlight.Languages.Common.Markup;
 
@@ -29,14 +28,6 @@ public static class XmlLexer
 
     /// <summary>Builds the lexer with both states populated.</summary>
     /// <returns>Configured lexer.</returns>
-    [SuppressMessage(
-        "StyleCop.CSharp.ReadabilityRules",
-        "SA1114: A parameter must follow a declaration",
-        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
-    [SuppressMessage(
-        "StyleCop.CSharp.ReadabilityRules",
-        "SA1115: Closing generic brackets must be spaced correctly",
-        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
     private static Lexer Build()
     {
         LexerRule[][] states =

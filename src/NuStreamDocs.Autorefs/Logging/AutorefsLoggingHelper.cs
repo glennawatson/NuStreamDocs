@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NuStreamDocs.Common;
 
@@ -24,10 +23,6 @@ internal static partial class AutorefsLoggingHelper
     /// <param name="logger">Target logger.</param>
     /// <param name="urlBytes">The url bytes.</param>
     /// <param name="id">UTF-8 reference ID bytes.</param>
-    [SuppressMessage(
-        "Performance",
-        "CA1873:Avoid potentially expensive logging",
-        Justification = "False positive: registry lookup is gated on logger.IsEnabled.")]
     internal static void LogReferenceResolved(ILogger? logger, ReadOnlySpan<byte> urlBytes, ReadOnlySpan<byte> id)
     {
         if (logger is null)

@@ -46,9 +46,6 @@ public static class Program
     /// <summary>Sonar analyzer category — repeated across every suppression we emit.</summary>
     private const string SonarCategory = "Sonar Code Smell";
 
-    /// <summary>StyleCop analyzer category — repeated across every suppression we emit.</summary>
-    private const string StyleCopCategory = "StyleCop";
-
     /// <summary>Generated-file extension required of any caller-supplied <c>--output</c> path.</summary>
     private const string RequiredOutputExtension = ".g.cs";
 
@@ -396,8 +393,6 @@ public static class Program
             (SonarCategory, "S1067:Expressions should not be too complex", "Generated catalogue."),
             (SonarCategory, "S103:Lines should not be too long", "Generated catalogue — SVG path data is sometimes long."),
             ("Style", "IDE0010:Add missing cases", "Default arm covers unmatched lengths."),
-            (StyleCopCategory, "SA1503:Braces should not be omitted", "Generated single-line if statements."),
-            (StyleCopCategory, "SA1107:Code should not contain multiple statements on one line", "Generated single-line if statements."),
         };
 
         for (var i = 0; i < rules.Length; i++)

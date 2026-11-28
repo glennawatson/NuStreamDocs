@@ -2,7 +2,6 @@
 // Glenn Watson and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Common;
 
 namespace NuStreamDocs.Icons.MaterialDesign;
@@ -37,10 +36,6 @@ public sealed class MdiIconLookup
     /// <param name="iconName">UTF-8 icon name (no <c>material-</c> prefix, no surrounding colons).</param>
     /// <param name="svg">UTF-8 SVG bytes on hit.</param>
     /// <returns>True when the icon is in the lookup.</returns>
-    [SuppressMessage(
-        "Performance",
-        "CA1822:Mark members as static",
-        Justification = "Instance member by design — encapsulates the per-build blob/index pair.")]
     public bool TryGet(ReadOnlySpan<byte> iconName, out ReadOnlySpan<byte> svg)
     {
         if (_altLookup.TryGetValue(iconName, out var slice))

@@ -12,10 +12,6 @@ namespace NuStreamDocs.Bibliography.Model;
 /// </summary>
 [SuppressMessage(
     "Design",
-    "CA1028:Enum storage should be Int32",
-    Justification = "The published locator enum has byte storage; changing it would break its binary contract.")]
-[SuppressMessage(
-    "Design",
     "SST2313:Enum storage type",
     Justification = "The published locator enum has byte storage; changing it would break its binary contract.")]
 public enum LocatorKind : byte

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using NuStreamDocs.Highlight.Languages.Common.Builders;
 
 namespace NuStreamDocs.Highlight.Languages.Misc;
@@ -51,14 +50,6 @@ public static class DiffLexer
     ];
 
     /// <summary>Gets the singleton lexer instance.</summary>
-    [SuppressMessage(
-        "StyleCop.CSharp.ReadabilityRules",
-        "SA1114",
-        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
-    [SuppressMessage(
-        "StyleCop.CSharp.ReadabilityRules",
-        "SA1115",
-        Justification = "Each rule is preceded by a blank-line-separated comment so the rule list reads top-to-bottom.")]
     public static Lexer Instance { get; } = new(
         LanguageRuleBuilder.BuildSingleState([
 
