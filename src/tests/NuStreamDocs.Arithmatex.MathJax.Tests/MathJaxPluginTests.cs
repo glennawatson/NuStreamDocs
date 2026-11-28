@@ -23,6 +23,8 @@ public class MathJaxPluginTests
 
         await Assert.That(rendered).Contains("window.MathJax");
         await Assert.That(rendered).Contains("processHtmlClass:'arithmatex'");
+        await Assert.That(rendered).Contains("nstd:page-load");
+        await Assert.That(rendered).Contains("typesetPromise");
         await Assert.That(rendered).Contains("<script src=\"https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js\" async></script>");
         await Assert.That(rendered).Contains("async></script>");
     }

@@ -59,8 +59,10 @@ public sealed class LightboxPlugin : IPagePostRenderPlugin, IHeadExtraProvider
         HeadExtraWriter.WriteUtf8(writer, "\"></script>\n"u8);
         HeadExtraWriter.WriteUtf8(
             writer,
-            "<script>document.addEventListener('DOMContentLoaded',function(){if(window.GLightbox){GLightbox({selector:'."u8);
+            "<script>(function(){var lb=null;function init(){if(!window.GLightbox){return;}if(lb&&lb.destroy){lb.destroy();}lb=GLightbox({selector:'."u8);
         HeadExtraWriter.WriteUtf8(writer, _options.Selector);
-        HeadExtraWriter.WriteUtf8(writer, "'});}});</script>\n"u8);
+        HeadExtraWriter.WriteUtf8(
+            writer,
+            "'});}document.addEventListener('DOMContentLoaded',init);document.addEventListener('nstd:page-load',init);})();</script>\n"u8);
     }
 }

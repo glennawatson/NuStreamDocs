@@ -77,7 +77,7 @@ public sealed class TransitionsPlugin : IPlugin, IHeadExtraProvider, IStaticAsse
         return sink.WrittenSpan.ToArray();
     }
 
-    /// <summary>Writes <paramref name="value"/> into an HTML double-quoted attribute, escaping <c>&amp;</c> and <c>"</c>.</summary>
+    /// <summary>Writes <paramref name="value"/> into the semicolon-delimited double-quoted config attribute, escaping <c>&amp;</c>, <c>"</c>, <c>%</c>, and <c>;</c>.</summary>
     /// <param name="sink">Destination.</param>
     /// <param name="value">UTF-8 bytes to write.</param>
     private static void WriteAttributeEscaped(IBufferWriter<byte> sink, byte[] value)
@@ -85,14 +85,21 @@ public sealed class TransitionsPlugin : IPlugin, IHeadExtraProvider, IStaticAsse
         var start = 0;
         for (var i = 0; i < value.Length; i++)
         {
-            var b = value[i];
-            if (b is not ((byte)'&' or (byte)'"'))
+            var replacement = value[i] switch
+            {
+                (byte)'&' => "&amp;"u8,
+                (byte)'"' => "&quot;"u8,
+                (byte)'%' => "%25"u8,
+                (byte)';' => "%3B"u8,
+                _ => default,
+            };
+            if (replacement.IsEmpty)
             {
                 continue;
             }
 
             sink.Write(value.AsSpan(start, i - start));
-            sink.Write(b == (byte)'&' ? "&amp;"u8 : "&quot;"u8);
+            sink.Write(replacement);
             start = i + 1;
         }
 
@@ -105,11 +112,7 @@ public sealed class TransitionsPlugin : IPlugin, IHeadExtraProvider, IStaticAsse
     private static void WriteInt(IBufferWriter<byte> sink, int value)
     {
         Span<byte> buffer = stackalloc byte[DelayBufferSize];
-        if (!Utf8Formatter.TryFormat(value, buffer, out var written))
-        {
-            return;
-        }
-
+        _ = Utf8Formatter.TryFormat(value, buffer, out var written);
         sink.Write(buffer[..written]);
     }
 

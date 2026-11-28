@@ -78,6 +78,8 @@ public class MermaidPluginTests
         await Assert.That(head).Contains("import mermaid from \"https://cdn.jsdelivr.net/npm/mermaid@12.0.0/dist/mermaid.esm.min.mjs\";\n");
         await Assert.That(head).Contains("getComputedStyle(document.querySelector(\".md-typeset\") ?? document.body).fontFamily");
         await Assert.That(head).Contains("mermaid.initialize({ startOnLoad: true, fontFamily, themeVariables: { fontFamily } });");
+        await Assert.That(head).Contains("nstd:page-load");
+        await Assert.That(head).Contains("mermaid.run");
         await Assert.That(head).EndsWith("</script>");
     }
 

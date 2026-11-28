@@ -18,7 +18,8 @@ public sealed class MathJaxPlugin : IPlugin, IHeadExtraProvider
     private static readonly CompositeFormat ConfigTemplate = CompositeFormat.Parse(
         @"<script>window.MathJax={{tex:{{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']],"
         + "processEscapes:true,processEnvironments:true}},"
-        + "options:{{ignoreHtmlClass:'{0}',processHtmlClass:'{1}'}}}};</script>");
+        + "options:{{ignoreHtmlClass:'{0}',processHtmlClass:'{1}'}}}};"
+        + "document.addEventListener('nstd:page-load',function(){{if(window.MathJax&&window.MathJax.typesetPromise){{window.MathJax.typesetPromise();}}}});</script>");
 
     /// <summary>Formats the asynchronous MathJax loader element.</summary>
     private static readonly CompositeFormat LoaderTemplate = CompositeFormat.Parse("<script src=\"{0}\" async></script>");

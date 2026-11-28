@@ -23,10 +23,13 @@ public class RouterScriptTests
                  {
                      "startViewTransition", "popstate", "prefers-reduced-motion", "DOMParser", "AbortController",
                      "nstd:page-load", "nstd:before-swap", "nstd:router", "location.assign", "IntersectionObserver",
-                     "scrollRestoration",
+                     "scrollRestoration", "syncChrome", "cspCompatible", "closeOverlays", "canonicalDocUrl",
+                     "skipTransition", "nd-lang-switcher", "md-footer", "md-nav--primary", "md-tabs",
                  })
         {
             await Assert.That(js).Contains(marker);
         }
+
+        await Assert.That(js).DoesNotContain("createContextualFragment");
     }
 }

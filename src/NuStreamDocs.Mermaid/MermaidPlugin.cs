@@ -52,6 +52,11 @@ public sealed class MermaidPlugin : IPagePostRenderPlugin, IHeadExtraProvider, I
            ";
            const fontFamily = getComputedStyle(document.querySelector(".md-typeset") ?? document.body).fontFamily;
            mermaid.initialize({ startOnLoad: true, fontFamily, themeVariables: { fontFamily } });
+           document.addEventListener("nstd:page-load", () => {
+             if (document.querySelector("pre.mermaid:not([data-processed])")) {
+               mermaid.run({ querySelector: "pre.mermaid:not([data-processed])" });
+             }
+           });
            </script>
            """u8;
 
