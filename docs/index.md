@@ -54,3 +54,4 @@ Welcome to the complete user and module documentation for **NuStreamDocs**.
 - [Privacy, CSP & Self-Hosted Fonts](modules/privacy-csp-fonts.md): `NuStreamDocs.Privacy`, `NuStreamDocs.Csp`, `NuStreamDocs.Fonts`
 - [Optimization, HTML Audit & Link Validation](modules/optimize-audit-validator.md): `NuStreamDocs.Optimize`, `NuStreamDocs.Audit`, `NuStreamDocs.LinkValidator`
 - [View Transitions & Live-Reload Dev Server](modules/transitions-and-serve.md): `NuStreamDocs.Transitions`, `NuStreamDocs.Serve`
+- [Single-File Print & PDF Export (`print.html`)](modules/export.md): `NuStreamDocs.Export`

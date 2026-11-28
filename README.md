@@ -136,6 +136,7 @@ Each module ships as its own NuGet package so you only pull what you use. Click 
 | [`NuStreamDocs.Blog.MkDocs`][BlogMk] | [![ver][BlogMkV]][BlogMk] | [Guide](docs/modules/blog-and-feed.md) | `.UseMkDocsBlog()` | `mkdocs-material`-flavored `blog/posts/` index and category archives. |
 | [`NuStreamDocs.Blog`][Blog] | [![ver][BlogV]][Blog] | [Guide](docs/modules/blog-and-feed.md) | `.UseWyamBlog()` | Wyam-flavored `YYYY-MM-DD-slug.md` blog and tag archives. |
 | [`NuStreamDocs.Feed`][Feed] | [![ver][FeedV]][Feed] | [Guide](docs/modules/blog-and-feed.md) | `.UseFeed()` | RSS 2.0 and Atom 1.0 feed generation. |
+| [`NuStreamDocs.Export`][Exp] | [![ver][ExpV]][Exp] | [Guide](docs/modules/export.md) | `.UseExport()` | Consolidates all chapters into a standalone print-ready and PDF-ready `/print.html` bundle. |
 
 ### Site Emitters, Config Readers, Security & Dev Experience
 
@@ -295,6 +296,8 @@ MIT. See [LICENSE](LICENSE) and [Acknowledgements & Third-Party Credits](docs/ac
 [FontsV]: https://img.shields.io/nuget/v/NuStreamDocs.Fonts.svg?label=
 [Trans]: https://www.nuget.org/packages/NuStreamDocs.Transitions/
 [TransV]: https://img.shields.io/nuget/v/NuStreamDocs.Transitions.svg?label=
+[Exp]: https://www.nuget.org/packages/NuStreamDocs.Export/
+[ExpV]: https://img.shields.io/nuget/v/NuStreamDocs.Export.svg?label=
 [Redir]: https://www.nuget.org/packages/NuStreamDocs.Redirects/
 [RedirV]: https://img.shields.io/nuget/v/NuStreamDocs.Redirects.svg?label=
 [Audit]: https://www.nuget.org/packages/NuStreamDocs.Audit/
