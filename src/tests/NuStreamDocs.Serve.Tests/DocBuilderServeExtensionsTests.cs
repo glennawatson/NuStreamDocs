@@ -16,17 +16,13 @@ namespace NuStreamDocs.Serve.Tests;
 /// </remarks>
 public class DocBuilderServeExtensionsTests
 {
-    /// <summary>Initial-build cancellation surfaces as <see cref="OperationCanceledException"/>.</summary>
+    /// <summary>The parameterless overload delegates into the pipeline and surfaces missing-input validation without leaking a background server.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task SingleArgOverloadReturnsTask()
     {
-        var builder = NewBuilder();
-        var task = builder.WatchAndServeAsync();
-
-        // The parameterless overload uses CancellationToken.None and would run forever.
-        // Just verify it returned a task we can observe — don't await it.
-        await Assert.That(task).IsNotNull();
+        DocBuilder unconfigured = new();
+        await Assert.That(() => unconfigured.WatchAndServeAsync()).Throws<Exception>();
     }
 
     /// <summary>The cancellation-token overload honors a pre-cancelled token at the initial-build step.</summary>

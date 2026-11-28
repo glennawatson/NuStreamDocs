@@ -4,9 +4,11 @@
 
 using System.Globalization;
 using System.Net;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace NuStreamDocs.Serve.Tests;
 
@@ -206,11 +208,12 @@ public class DevServerTests
             _ = Directory.CreateDirectory(root);
             seed(root);
 
-            var port = ReserveLoopbackPort();
-            WatchAndServeOptions options = new() { Host = "127.0.0.1", Port = port, LiveReload = liveReload };
+            WatchAndServeOptions options = new() { Host = "127.0.0.1", Port = 0, LiveReload = liveReload };
 
             var app = await DevServer.StartAsync(root, options, new(), CancellationToken.None).ConfigureAwait(false);
-            HttpClient client = new() { BaseAddress = new($"http://127.0.0.1:{port}/", UriKind.Absolute) };
+            var boundAddress = GetFirstBoundAddress(app);
+            var baseUri = boundAddress.EndsWith('/') ? boundAddress : $"{boundAddress}/";
+            HttpClient client = new() { BaseAddress = new(baseUri, UriKind.Absolute) };
             return new(root, app, client);
         }
 
@@ -231,23 +234,52 @@ public class DevServerTests
                 }
                 finally
                 {
-                    if (Directory.Exists(Root))
-                    {
-                        Directory.Delete(Root, true);
-                    }
+                    TryDeleteDirectory(Root);
                 }
             }
         }
 
-        /// <summary>Asks the OS for a free TCP loopback port and immediately releases it; the dev server then binds to it.</summary>
-        /// <returns>Free port.</returns>
-        private static int ReserveLoopbackPort()
+        /// <summary>Reads the first Kestrel bound address after startup without LINQ allocations.</summary>
+        /// <param name="app">Started web application.</param>
+        /// <returns>Bound HTTP URL.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when Kestrel reports no bound addresses.</exception>
+        private static string GetFirstBoundAddress(WebApplication app)
         {
-            using TcpListener listener = new(IPAddress.Loopback, 0);
-            listener.Start();
-            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-            listener.Stop();
-            return port;
+            var addresses = app.Services
+                .GetRequiredService<IServer>()
+                .Features
+                .Get<IServerAddressesFeature>()!
+                .Addresses;
+            using var enumerator = addresses.GetEnumerator();
+            if (enumerator.MoveNext())
+            {
+                return enumerator.Current;
+            }
+
+            throw new InvalidOperationException("Kestrel reported no bound addresses.");
+        }
+
+        /// <summary>Deletes <paramref name="path"/> best-effort when OS file watchers release handles asynchronously.</summary>
+        /// <param name="path">Directory path.</param>
+        private static void TryDeleteDirectory(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                return;
+            }
+
+            try
+            {
+                Directory.Delete(path, true);
+            }
+            catch (IOException)
+            {
+                // PhysicalFileProvider watcher handle may release asynchronously on Windows.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Same transient handle release race on Windows.
+            }
         }
     }
 }

@@ -48,9 +48,9 @@ internal sealed class LoopbackFeedServer : IAsyncDisposable
         {
             _ = await Requests;
         }
-        catch (OperationCanceledException)
+        catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException or SocketException or IOException)
         {
-            // Teardown can interrupt a request when an assertion fails.
+            // Teardown can interrupt a pending accept or read on Windows/Unix.
         }
         finally
         {

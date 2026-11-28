@@ -48,7 +48,7 @@ internal sealed class LoopbackHttpServer : IAsyncDisposable
         {
             _ = await Requests;
         }
-        catch (OperationCanceledException)
+        catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException or SocketException or IOException)
         {
             // A test may stop before all expected requests arrive.
         }
