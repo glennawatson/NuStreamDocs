@@ -98,6 +98,7 @@ Each module ships as its own NuGet package so you only pull what you use. Click 
 |---|---|---|---|---|
 | [`NuStreamDocs.Snippets`][Snip] | [![ver][SnipV]][Snip] | [Guide](docs/modules/snippets-macros-layouts.md) | `.UseSnippets()` | `--8<-- "file#section"` whole-file and section includes. |
 | [`NuStreamDocs.Macros`][Macros] | [![ver][MacrosV]][Macros] | [Guide](docs/modules/snippets-macros-layouts.md) | `.UseMacros()` | `{{ name }}` dictionary variable substitution outside code spans. |
+| [`NuStreamDocs.GitInfo`][GitInfo] | [![ver][GitInfoV]][GitInfo] | [Guide](docs/modules/git-info.md) | `.UseGitInfo()` | Batched `git log` revision dates, contributor footers, and `sitemap.xml` `<lastmod>` enrichment. |
 | [`NuStreamDocs.Layouts`][Layouts] | [![ver][LayoutsV]][Layouts] | [Guide](docs/modules/snippets-macros-layouts.md) | `.UseLayouts()` | Jinja-style `{% extends %}` / `{% block %}` Markdown template inheritance. |
 | [`NuStreamDocs.Bibliography`][Bib] | [![ver][BibV]][Bib] | [Guide](docs/modules/bibliography.md) | `.UseBibliography()` | Pandoc `[@key]` citations, CSL-JSON loader, and AGLC4 formatting. |
 | [`NuStreamDocs.SuperFences`][SF] | [![ver][SFV]][SF] | [Guide](docs/modules/highlight.md) | `.UseSuperFences()` | Custom fenced-block dispatcher for diagram and widget plugins. |
@@ -210,6 +211,8 @@ MIT. See [LICENSE](LICENSE) and [Acknowledgements & Third-Party Credits](docs/ac
 [MdExtV]: https://img.shields.io/nuget/v/NuStreamDocs.MarkdownExtensions.svg?label=
 [Macros]: https://www.nuget.org/packages/NuStreamDocs.Macros/
 [MacrosV]: https://img.shields.io/nuget/v/NuStreamDocs.Macros.svg?label=
+[GitInfo]: https://www.nuget.org/packages/NuStreamDocs.GitInfo/
+[GitInfoV]: https://img.shields.io/nuget/v/NuStreamDocs.GitInfo.svg?label=
 [Bib]: https://www.nuget.org/packages/NuStreamDocs.Bibliography/
 [BibV]: https://img.shields.io/nuget/v/NuStreamDocs.Bibliography.svg?label=
 [Arith]: https://www.nuget.org/packages/NuStreamDocs.Arithmatex/

@@ -23,6 +23,7 @@ Welcome to the complete user and module documentation for **NuStreamDocs**.
 - [Cross-References (`Autorefs`, `Xrefs`, `SphinxInventory`)](modules/cross-references.md): `NuStreamDocs.Autorefs`, `NuStreamDocs.Xrefs`, `NuStreamDocs.SphinxInventory`
 - [Search (`Pagefind`, `Lunr`, `SQLite`)](modules/search.md): `NuStreamDocs.Search`, `NuStreamDocs.Search.Pagefind`, `NuStreamDocs.Search.Lunr`, `NuStreamDocs.Search.Sqlite`
 - [Versioning (`versions.json`)](modules/versions.md): `NuStreamDocs.Versions`
+- [Git Revision Dates & Contributors](modules/git-info.md): `NuStreamDocs.GitInfo`
 
 ### Markdown Authoring & Code
 - [Syntax Highlighting & SuperFences](modules/highlight.md): `NuStreamDocs.Highlight`, `NuStreamDocs.SuperFences`
