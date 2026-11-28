@@ -4,7 +4,7 @@
 
 ## `NuStreamDocs.Transitions`
 
-Ships a lightweight, framework-free client router that intercepts same-origin page clicks, prefetches links on hover (`PrefetchDelayMs = 80`), swaps the main content and TOC regions in place using the browser's View Transitions API (`TransitionAnimation.Fade` / `Slide`), and preserves sidebar scroll state. Degrades cleanly to standard browser navigation when JavaScript or View Transitions are unavailable.
+Ships a lightweight, framework-free client router that intercepts same-origin page clicks, prefetches links on hover (`PrefetchDelayMs = 80`), swaps the main content, table of contents, primary sidebar, top tabs, header title/edit link, language switcher, and footer in place using the browser's View Transitions API (`TransitionAnimation.Fade`), and preserves search state and sidebar scroll position. Degrades cleanly to standard browser navigation when JavaScript, View Transitions, or per-page CSP hashes require a full reload.
 
 ```csharp
 using NuStreamDocs.Transitions;
@@ -12,8 +12,15 @@ using NuStreamDocs.Transitions;
 builder.UseTransitions(opts => opts
     .WithAnimation(TransitionAnimation.Fade)
     .WithPrefetch(PrefetchStrategy.Hover)
-    .WithPrefetchDelayMs(80));
+    .WithPrefetchDelay(80));
 ```
+
+### Lifecycle Events
+
+Custom scripts can hook into soft navigation via document-level `CustomEvent`s:
+
+- `nstd:before-swap` (`detail.to`, `detail.newDocument`): Fired right before DOM regions are updated.
+- `nstd:page-load` (`detail.url`): Fired on initial load and after each soft navigation completes (`Mermaid`, `Lightbox`, `MathJax`, and TOC scroll-spy re-bind automatically).
 
 ---
 

@@ -39,23 +39,28 @@ public class TransitionsPluginTests
         await Assert.That(head).Contains("<script src=\"/assets/javascripts/nstd-router.js\" defer></script>");
     }
 
-    /// <summary>Custom options are reflected in the emitted config meta tag, and a <c>"</c> in a selector is escaped.</summary>
+    /// <summary>Custom options are reflected in the emitted config meta tag, and <c>&amp;</c>, <c>"</c>, <c>%</c>, and <c>;</c> in selectors are escaped.</summary>
     /// <returns>Async test.</returns>
     [Test]
     public async Task CustomOptionsReflectedAndEscaped()
     {
         var plugin = new TransitionsPlugin(TransitionsOptions.Default
-            .WithContentSelector("[data-x=\"y\"]"u8)
+            .WithContentSelector("[data-x=\"y&z;100%\"]"u8)
             .WithNavSelector(".side"u8)
             .WithPrefetch(PrefetchStrategy.Off)
             .WithAnimation(TransitionAnimation.None));
         ArrayBufferWriter<byte> sink = new();
         plugin.WriteHeadExtra(sink);
         var head = Encoding.UTF8.GetString(sink.WrittenSpan);
-        await Assert.That(head).Contains("content=[data-x=&quot;y&quot;]");
+        await Assert.That(head).Contains("content=[data-x=&quot;y&amp;z%3B100%25&quot;]");
         await Assert.That(head).Contains("nav=.side");
         await Assert.That(head).Contains("prefetch=off");
         await Assert.That(head).Contains("animation=none");
+
+        var viewportPlugin = new TransitionsPlugin(TransitionsOptions.Default.WithPrefetch(PrefetchStrategy.Viewport));
+        ArrayBufferWriter<byte> viewportSink = new();
+        viewportPlugin.WriteHeadExtra(viewportSink);
+        await Assert.That(Encoding.UTF8.GetString(viewportSink.WrittenSpan)).Contains("prefetch=viewport");
     }
 
     /// <summary>A disabled plugin contributes nothing.</summary>

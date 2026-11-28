@@ -69,7 +69,8 @@
                 var first = results.querySelector("a");
                 event.preventDefault();
                 if (first) {
-                    window.location.href = first.href;
+                    searchToggle.checked = false;
+                    first.click();
                 }
             });
         }
@@ -84,7 +85,8 @@
                     return;
                 }
                 event.preventDefault();
-                window.location.href = first.href;
+                searchToggle.checked = false;
+                first.click();
             });
         }
 
@@ -258,17 +260,30 @@
         }
 
         var input = holder.querySelector("input");
-        var nav = document.querySelector(".md-sidebar--primary .md-nav--primary");
-        if (!input || !nav) {
+        if (!input) {
             return;
         }
 
-        var items = nav.querySelectorAll(".md-nav__item");
         var toggleSnapshot = [];
-        var toggles = nav.querySelectorAll("input.md-nav__toggle");
-        for (var t = 0; t < toggles.length; t++) {
-            toggleSnapshot.push(toggles[t].checked);
+
+        function getNav() {
+            return document.querySelector(".md-sidebar--primary .md-nav--primary");
         }
+
+        function captureSnapshot() {
+            toggleSnapshot = [];
+            var nav = getNav();
+            if (!nav) {
+                return;
+            }
+            var toggles = nav.querySelectorAll("input.md-nav__toggle");
+            for (var t = 0; t < toggles.length; t++) {
+                toggleSnapshot.push(toggles[t].checked);
+            }
+        }
+
+        captureSnapshot();
+        document.addEventListener("nstd:page-load", captureSnapshot);
 
         function labelText(item) {
             var direct = item.querySelector(":scope > .md-nav__link, :scope > .md-nav__container > .md-nav__link");
@@ -284,6 +299,11 @@
         }
 
         function reset() {
+            var nav = getNav();
+            if (!nav) {
+                return;
+            }
+            var items = nav.querySelectorAll(".md-nav__item");
             for (var i = 0; i < items.length; i++) {
                 clearItem(items[i]);
             }
@@ -327,6 +347,10 @@
         input.addEventListener("input", function () {
             window.clearTimeout(debounceTimer);
             debounceTimer = window.setTimeout(function () {
+                var nav = getNav();
+                if (!nav) {
+                    return;
+                }
                 var query = input.value.trim().toLowerCase();
                 if (!query) {
                     reset();
@@ -421,7 +445,8 @@
                 return;
             }
 
-            var matches = tabPath === "/" ? path === "/" : (path === tabPath || path.indexOf(tabPath) === 0);
+            var prefix = tabPath.endsWith("/") ? tabPath : tabPath + "/";
+            var matches = tabPath === "/" ? path === "/" : (path === tabPath || path.indexOf(prefix) === 0);
             if (matches && tabPath.length > bestLen) {
                 best = item;
                 bestLen = tabPath.length;
@@ -456,12 +481,16 @@
 
         links.forEach(function (link) {
             link.classList.remove("md-nav__link--active");
+            if (link.getAttribute("aria-current") === "page") {
+                link.removeAttribute("aria-current");
+            }
         });
         if (!best) {
             return;
         }
 
         best.classList.add("md-nav__link--active");
+        best.setAttribute("aria-current", "page");
 
         // Expand collapsed ancestor sections so the active item is visible.
         var node = best.closest(".md-nav__item");

@@ -23,6 +23,7 @@ public class LightboxPluginTests
         await Assert.That(html.Contains("glightbox.min.css", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("glightbox.min.js", StringComparison.Ordinal)).IsTrue();
         await Assert.That(html.Contains("GLightbox", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(html.Contains("nstd:page-load", StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>When wrapping is disabled, no head bootstrap script is missed but the bytes are inert.</summary>
