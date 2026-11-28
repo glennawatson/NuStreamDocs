@@ -36,6 +36,7 @@ embedded resources so a published build is single-file and works under
 
 ## Table of contents
 
+- [Detailed Module Documentation (`docs/`)](docs/index.md)
 - [Quick start](#quick-start)
 - [The builder](#the-builder)
 - [Themes](#themes)
