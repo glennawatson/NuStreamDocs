@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <PackageId>NuStreamDocs.I18n</PackageId>
+    <Description>Multi-locale documentation routing, missing-translation fallback synthesis, HTML lang attribute rewriting, hreflang head and sitemap.xml alternate links, and accessible language switcher markup in pure UTF-8.</Description>
+    <RootNamespace>NuStreamDocs.I18n</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.I18n.Tests"/>
+  </ItemGroup>
+
+</Project>

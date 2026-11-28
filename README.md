@@ -140,6 +140,7 @@ Each module ships as its own NuGet package so you only pull what you use. Click 
 |---|---|---|---|---|
 | [`NuStreamDocs.Sitemap`][Site] | [![ver][SiteV]][Site] | [Guide](docs/modules/sitemap-and-redirects.md) | `.UseSitemap()`, `.UseNotFoundPage()` | Emits `sitemap.xml`, `robots.txt`, and themed `404.html`. |
 | [`NuStreamDocs.Redirects`][Redir] | [![ver][RedirV]][Redir] | [Guide](docs/modules/sitemap-and-redirects.md) | `.UseRedirects(...)` | Emits `_redirects`, `_headers`, and meta-refresh HTML stubs from `redirect_from`. |
+| [`NuStreamDocs.I18n`][I18n] | [![ver][I18nV]][I18n] | [Guide](docs/modules/i18n.md) | `.UseI18n(...)` | Multi-locale routing, fallback synthesis, `hreflang` head and `sitemap.xml` links, and language switcher. |
 | [`NuStreamDocs.Versions`][Ver] | [![ver][VerV]][Ver] | [Guide](docs/modules/versions.md) | `.UseVersions()` | `mike`-compatible `versions.json` multi-release manifest. |
 | [`NuStreamDocs.Tags`][Tags] | [![ver][TagsV]][Tags] | [Guide](docs/modules/toc-and-tags.md) | `.UseTags()` | Tag index and per-tag listing pages from `tags:` frontmatter. |
 | [`NuStreamDocs.Metadata`][Meta] | [![ver][MetaV]][Meta] | [Guide](docs/modules/nav-and-metadata.md) | `.UseMetadata()` | Directory `_meta.yml` and `page.meta.yml` frontmatter inheritance. |
@@ -176,6 +177,8 @@ MIT. See [LICENSE](LICENSE) and [Acknowledgements & Third-Party Credits](docs/ac
 
 [Core]: https://www.nuget.org/packages/NuStreamDocs/
 [CoreV]: https://img.shields.io/nuget/v/NuStreamDocs.svg?label=
+[I18n]: https://www.nuget.org/packages/NuStreamDocs.I18n/
+[I18nV]: https://img.shields.io/nuget/v/NuStreamDocs.I18n.svg?label=
 [Cm]: https://www.nuget.org/packages/NuStreamDocs.Common/
 [CmV]: https://img.shields.io/nuget/v/NuStreamDocs.Common.svg?label=
 [Mc]: https://www.nuget.org/packages/NuStreamDocs.Markdown.Common/
