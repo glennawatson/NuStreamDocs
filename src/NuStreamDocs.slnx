@@ -51,6 +51,7 @@
     <Project Path="NuStreamDocs.Privacy/NuStreamDocs.Privacy.csproj" />
     <Project Path="NuStreamDocs.Redirects/NuStreamDocs.Redirects.csproj" />
     <Project Path="NuStreamDocs.Csp/NuStreamDocs.Csp.csproj" />
+    <Project Path="NuStreamDocs.Social/NuStreamDocs.Social.csproj" />
     <Project Path="NuStreamDocs.Audit/NuStreamDocs.Audit.csproj" />
     <Project Path="NuStreamDocs.ContentLoader/NuStreamDocs.ContentLoader.csproj" />
     <Project Path="NuStreamDocs.ContentLoader.Feed/NuStreamDocs.ContentLoader.Feed.csproj" />
@@ -115,6 +116,7 @@
         <Project Path="tests/NuStreamDocs.Privacy.Tests/NuStreamDocs.Privacy.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Redirects.Tests/NuStreamDocs.Redirects.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Csp.Tests/NuStreamDocs.Csp.Tests.csproj" />
+        <Project Path="tests/NuStreamDocs.Social.Tests/NuStreamDocs.Social.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.Audit.Tests/NuStreamDocs.Audit.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.ContentLoader.Tests/NuStreamDocs.ContentLoader.Tests.csproj" />
         <Project Path="tests/NuStreamDocs.ContentLoader.Feed.Tests/NuStreamDocs.ContentLoader.Feed.Tests.csproj" />
