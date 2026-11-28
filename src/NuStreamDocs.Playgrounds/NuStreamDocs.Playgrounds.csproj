@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <PackageId>NuStreamDocs.Playgrounds</PackageId>
+    <Description>Interactive HTTP API request playgrounds (curl, C# HttpClient, fetch, and live Send Request drawer) and sandboxed live code embeds (.NET Fiddle, StackBlitz, CodePen, JSFiddle) for NuStreamDocs.</Description>
+    <RootNamespace>NuStreamDocs.Playgrounds</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuStreamDocs\NuStreamDocs.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NuStreamDocs.Playgrounds.Tests"/>
+  </ItemGroup>
+
+</Project>
